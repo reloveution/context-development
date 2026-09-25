@@ -1,0 +1,63 @@
+---
+description: "Development process and collaboration rules. Guidelines for incremental development, communication, and package management."
+globs:
+alwaysApply: true
+---
+
+## Process Rules
+
+- Ask clarifying questions before assuming requirements
+- Use dynamic code generators, not hard-coded static examples
+- Always specify exact file name when writing code
+- No temporary compatibility scaffolding: do not add aliases, typedef shims,
+  temporary adapters, or "keep old and new in parallel" bridges
+- If a change is too large for the current step, stop at a clear compile
+  error instead of introducing temporary hacks that hide unfinished migration
+- Prefer explicit breakage over hidden compatibility layers during planned
+  architectural migrations
+- Prefer explicit compile errors over stubs/placeholders when implementing
+  migration steps. A visible broken contract is better than masked logic.
+
+## Memory (hard rule)
+- Memory is OFF. Do not persist anything to the harness memory store — no auto-save of facts, preferences, or project state.
+- If something genuinely seems worth keeping across sessions, propose it to the user first. Only on explicit approval, write it into global config (a skill or an always-on rule) mirrored across all three harnesses — never into memory. See skill `harness-layout`.
+
+## Incremental Development
+For complex tasks (multiple files, architectural changes):
+1. Analyze task thoroughly, create a detailed step-by-step plan
+2. Present the plan to the user for review
+3. Implement one step at a time — provide complete, ready-to-use code
+4. Wait for user confirmation before proceeding
+5. Answer clarifying questions before continuing
+
+## Plans Handed Off to Another Agent
+- When a plan will be executed by another AI agent autonomously (Claude Code/Codex, no chat context), write it at maximum detail: concrete AAA test cases, exact file paths, mock/class names, and a clear phased structure — not high-level summaries.
+
+## Interaction Guidelines
+- Assume user is familiar with programming concepts but may be new to Dart
+- Explain Dart-specific features (null safety, futures, streams) when generating code
+- When suggesting new dependencies, explain their benefits
+
+## Post-Implementation Review
+After completing each plan step:
+1. Run `git diff` against the last commit
+2. Perform a code review following the Code Review Checklist — analyze thoroughly
+3. Fix any issues found
+4. Only then stop and wait for the user's review
+
+## Project Tooling
+- Flutter is fvm-pinned; prefer `fvm flutter` / `fvm dart` over global
+- Custom scripts (Python tooling, non-Dart helpers) live in `scripts/`, not `tool/`
+- Heavy Gradle builds are disk/RAM-hungry — clean up after yourself, confirm before a build
+
+## File Tools (hard rule)
+- Read files with the file-read tool, edit with the file-edit/write tool
+- Never read via `cat`/`sed -n`/`head`; never edit via `sed -i`, heredoc or an inline `python3 -` script
+- Shell is for *running* things — tests, analyze, format, codegen, `git status`/`diff` — plus content search (`grep`/`find`) when the harness has no search tool
+- This overrides any harness mode that suggests editing files through shell commands
+
+## Package Management
+- Use `mcp_dart_pub` if available; otherwise `flutter pub add <package>`
+- Dev dependencies: `flutter pub add dev:<package>`
+- Remove: `dart pub remove <package>`
+- Search packages: `mcp_dart_pub_dev_search` first; explain benefits when suggesting new deps

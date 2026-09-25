@@ -1,0 +1,16 @@
+---
+description: "Strict git whitelist for agents. Only git status and git diff."
+globs:
+alwaysApply: true
+---
+
+## Git (strict whitelist)
+
+- Agent may run **only** `git status` and `git diff` (any flags: `--stat`,
+  `--name-only`, range specs, paths).
+- **Forbidden:** every other git subcommand (`log`, `show`, `add`, `commit`,
+  `push`, `pull`, `fetch`, `checkout`, `branch`, `reset`, `rebase`, `stash`,
+  `clean`, `config`, `merge`, `tag`, etc.).
+- **Forbidden:** scripts or chained shell that invoke any git subcommand other
+  than `status` or `diff`.
+- No exceptions. User runs all other git operations manually.

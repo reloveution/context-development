@@ -1,0 +1,26 @@
+---
+description: Agent execution, context, and token management rules
+alwaysApply: true
+---
+
+# Context and Token Management
+
+- Run all work sequentially in a single agent context; do not launch multiple
+  agents or parallel tool executions — this also covers backgrounded shell
+  calls. Run long commands (`flutter test`, `pub get`) synchronously with an
+  explicit timeout instead of backgrounding them.
+- Never perform automatic chat summarization or context compaction unless the
+  user explicitly requests it.
+- When you estimate that the conversation context is 70–80% full, generate a
+  concise, copy-pasteable handover prompt that describes:
+  - the current task and its goals,
+  - what has already been implemented,
+  - how the current solution approach works,
+  - what remains to be done and how to proceed,
+  so the user can reset the chat and continue work seamlessly.
+- When editing project files, avoid duplicating large code changes into the
+  chat; describe modifications at a high level and include only the minimal
+  code snippets strictly necessary for understanding.
+- Prefer concise explanations and avoid redundant text or large code dumps to
+  conserve tokens.
+

@@ -1,0 +1,38 @@
+---
+description: "Core software design principles for maintainable and scalable code. Covers SOLID principles, composition patterns, and architectural decision guidelines."
+globs:
+alwaysApply: false
+---
+
+# Design Principles Rules
+
+## SOLID Principles
+- **Single Responsibility**: one reason to change per class
+- **Open/Closed**: open for extension, closed for modification
+- **Liskov Substitution**: subtypes must honor behavioral contracts of base types
+- **Interface Segregation**: small specific interfaces, not large general ones
+- **Dependency Inversion**: depend on abstractions, not concretions
+
+## Composition & Reusability
+- Composition over inheritance when logically justified
+- Prefer immutable data structures
+- Implement `hashCode` and `operator==` for custom classes
+
+## Polymorphism Over Type Checking
+Prefer polymorphism over switch/case type checking when all implementations share the same behavior.
+
+```dart
+// Bad — redundant switch + casting
+switch (param.paramType) {
+  case ParamType.text:
+    final p = param as TextParam;
+    return p.copyWith(changeHistory: p.changeHistory.addChange(newValue as TextParamValue, changedBy));
+  // ...
+}
+
+// Good — polymorphic
+IParam _updateParam(IParam param, IParamValue newValue, String changedBy) =>
+    param.copyWith(changeHistory: param.changeHistory.addChange(newValue, changedBy));
+```
+
+Use when: all type-specific cases call identical methods from the base interface.

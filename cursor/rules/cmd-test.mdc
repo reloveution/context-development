@@ -1,0 +1,27 @@
+---
+description: "Command: generate tests for changed files. Activate manually when you need to create or update tests."
+globs:
+alwaysApply: false
+---
+
+## Test Command
+
+Run `git diff --name-only` against the last commit to find all changed `.dart` files in `lib/`.
+
+For each changed file that contains business logic (use cases, repositories, blocs, cubits, services, utilities):
+1. Determine if tests already exist for it (check corresponding path under `test/`)
+2. If no tests exist — generate a complete test file
+3. If tests exist — check if new/changed methods are covered, add missing tests
+
+Follow project testing conventions:
+- Arrange-Act-Assert (Given-When-Then) pattern
+- Wrap every suite in `group()` named after the class/feature
+- Name tests with "should ..." phrasing
+- Prefer fakes/stubs over mocks; use `mocktail` if mocks are needed
+- Each test must fail if production code regresses
+- Use `package:checks` for assertions
+- Register fallback values for non-nullable custom types
+
+Skip: generated files, pure UI widgets without logic, model/DTO classes with only `fromJson`/`toJson`.
+
+After generating tests, run them with `dart test` or `flutter test` to verify they pass.

@@ -1,0 +1,45 @@
+---
+description: "Code review checklist for LLM reviewers: branch hygiene, diff scoping, per-file checks, testing, security, performance, and constructive feedback."
+globs:
+alwaysApply: false
+---
+
+# Code Review
+
+## Pre-Review
+- Confirm branch is feature/bugfix — not main/develop
+- Verify branch is up-to-date with target (main)
+- List all changed/added/deleted files
+- For every change: look up commit title, review connected components
+- Never assume a fix is correct without investigating implementation details
+- Be objective — devil's advocate approach, not automatic praise
+- If a change remains unclear after investigation, include this in the report
+- Fetch online documentation if unsure about package/library best practices
+
+## Per File
+- Correct directory and naming conventions
+- Clear single responsibility; reason for change is understandable
+- Readable names (variables, functions, classes)
+- Correct logic, no missing edge cases
+- Modular, no unnecessary duplication
+- Errors/exceptions handled appropriately
+- No security concerns (input validation, no secrets in code)
+- No obvious performance issues
+- Public APIs, complex logic, new modules are documented
+- Sufficient test coverage for new/changed logic
+- Matches project style guide
+- Generated files are up-to-date and not manually edited
+
+## PR-Level
+- Change set is focused and scoped to stated purpose
+- PR description accurately reflects changes
+- New/updated tests cover new/changed logic
+- Evaluate if tests can actually fail — not just checking mocks
+- CI passes
+
+## Big-O Lens
+
+Diff scan for: nested loops · membership/sort in loop · N+1 I/O · derivation in `build()`. Full lens + safety + report format: skill `dart-code-review` and `performance.mdc`. Scanner: `python3 ~/.cursor/skills/flutter-performance/scripts/analyze_complexity.py . --format markdown` (Dart-aware).
+
+## Output
+Conclusions and recommendations per file. Constructive feedback with suggestions for improvement.

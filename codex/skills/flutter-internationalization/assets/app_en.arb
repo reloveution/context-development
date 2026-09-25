@@ -1,0 +1,81 @@
+{
+  "appTitle": "My App",
+  "@appTitle": {
+    "description": "Application title shown in app bar"
+  },
+  "welcome": "Welcome to our app!",
+  "@welcome": {
+    "description": "Welcome message on home screen"
+  },
+  "hello": "Hello {userName}!",
+  "@hello": {
+    "description": "Personalized greeting message",
+    "placeholders": {
+      "userName": {
+        "type": "String",
+        "example": "John"
+      }
+    }
+  },
+  "itemCount": "{count, plural, =0{No items} =1{1 item} other{{count} items}}",
+  "@itemCount": {
+    "description": "Number of items in cart/list",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "price": "Price: {value}",
+  "@price": {
+    "description": "Price display with formatting",
+    "placeholders": {
+      "value": {
+        "type": "double",
+        "format": "simpleCurrency"
+      }
+    }
+  },
+  "eventDate": "Event on {date}",
+  "@eventDate": {
+    "description": "Event date display",
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "yMMMd"
+      }
+    }
+  },
+  "save": "Save",
+  "@save": {
+    "description": "Save button label"
+  },
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button label"
+  },
+  "delete": "Delete",
+  "@delete": {
+    "description": "Delete button label"
+  },
+  "settings": "Settings",
+  "@settings": {
+    "description": "Settings menu item"
+  },
+  "about": "About",
+  "@about": {
+    "description": "About menu item"
+  },
+  "logout": "Logout",
+  "@logout": {
+    "description": "Logout button label"
+  },
+  "login": "Login",
+  "@login": {
+    "description": "Login button label"
+  },
+  "signup": "Sign Up",
+  "@signup": {
+    "description": "Sign up button label"
+  }
+}

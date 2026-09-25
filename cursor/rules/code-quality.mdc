@@ -1,0 +1,250 @@
+---
+description: “Core code quality rules for clean, maintainable Dart/Flutter code. Covers async/await, null safety, const constructors, error handling, class member ordering, and general best practices.”
+globs:
+alwaysApply: true
+---
+
+# Code Quality
+
+## Logging & Debugging
+- No `print`/`debugPrint` in production code; preserve `log()` calls
+- Use `dart:developer` `log()` for structured logging (integrates with DevTools)
+- No new comments in code — only `TODO` comments in English; do not modify existing comments
+- Exception: empty trailing `//` as dartfmt one-per-line alignment markers (e.g. matrix/grid literals) — keep/restore these, they're formatting devices, not prose
+- Document reasons when ignoring linter rules
+- Implement proper `toString()` for debugging; use `assert` for development-time checks
+
+## Code Quality Tools
+- `dart_format` for formatting, `dart_fix` for auto-fixes, `analyze_files` for linting
+- Code generation: ensure `build_runner` is a dev dependency; run `dart run build_runner build --delete-conflicting-outputs` after modifying generated files
+- Use HTTPS for URLs in pubspec.yaml
+
+## Styling
+- Max line length: 80 characters
+- Trailing commas in all multi-line parameter lists, calls, and collections
+- Newline at end of file
+- `PascalCase` for classes, `camelCase` for members/variables/functions/enums, `snake_case` for files
+
+## Dart Best Practices
+- Follow Effective Dart guidelines
+- Use pattern matching where it simplifies code
+- Use records for returning multiple values when a full class is overkill
+- Prefer exhaustive `switch` expressions (no `break` needed)
+- Use `Stream`s for sequences of asynchronous events
+
+## Documentation
+- No doc comments (`///`) — see "no comments" policy above; only exception is dartfmt alignment markers
+- `@Deprecated('message')` annotation must always include a message
+- Describe all properties in `Diagnosticable` classes via `debugFillProperties()` (code, not comments)
+- Define related classes in the same library file; group related libraries in the same folder
+
+## API Design
+- Design APIs from user perspective — intuitive and hard to misuse
+- Self-documenting names and structure are part of good API design
+- Write code as short as possible while remaining clear
+
+## Strings & Localization
+- Project uses `slang`, not `flutter gen-l10n`: new user-facing string → add the key to `lib/app/i18n/strings.i18n.json`, run `dart run slang` to regenerate `strings.g.dart`, then use the generated key — complete inline, never leave a TODO for it
+- Extract all user-facing strings to localization files; no hardcoded strings
+- Single quotes for string literals
+- Prefer string interpolation (`$variable`) over concatenation (`+`)
+- Prefer adjacent string concatenation: `’text’ ‘more’` instead of `’text’ + ‘more’`
+- Avoid escaping inner quotes — use alternative quote types: `”text ‘with’ quotes”`
+- Avoid unnecessary string escapes, interpolations, and adjacent strings in lists
+- Add whitespace between adjacent strings when concatenating
+
+## Async/Await
+- Always use `async`/`await`, never `.then()`
+- Don’t use `async`/`await` for simple pass-through — use arrow syntax:
+  Bad: `Future<T> method() async { return await other(); }`
+  Good: `Future<T> method() => other();`
+- No unnecessary `async` when `await` is not used; no unnecessary `await` in return statements
+- Mark fire-and-forget futures with `unawaited()`; never silently discard futures; avoid unnecessary `unawaited()` calls
+- Avoid blocking UI thread — use isolates for CPU-intensive tasks
+- Avoid slow async I/O in critical sections
+- Declare `Future<void>` for async methods that don’t yield a value
+
+## Functions & Callbacks
+- Arrow functions for single-expression functions/callbacks
+- For widget build and BlocBuilder callbacks, prefer arrow + ternary over if-else; replace unused params with `_`
+- Use extension methods for utility/business logic instead of static methods
+- Named parameters when more than 2 parameters
+- `typedef` for complex function signatures; use generic function type syntax
+- Prefer function declarations over function variables
+- Avoid function literals in forEach when tear-offs are available: `list.forEach(print)`
+- Max ~20 lines per function, single purpose
+- Avoid positional boolean parameters — use named
+- Avoid redundant argument values
+- Required named parameters before optional ones
+
+## Null Safety
+- Avoid `!` unless value is guaranteed non-null
+- Extract nullable to local variable before use:
+  Bad: `if (state.fractureSystem != null && state.fractureSystem!.uid != current)`
+  Good: `final fractureSystem = state.fractureSystem; if (fractureSystem != null && fractureSystem.uid != current)`
+- Prefer `?.`, `??`, `??=` over explicit null checks
+- Avoid unnecessary null checks when value is already known non-null
+- Avoid unnecessary null in null-aware operators: `x ?? defaultValue` not `x ?? null`
+- Use `if (x != null)` for nullable types when converting to bool
+- Avoid null checks in equality operators — use null-aware operators
+- Nullable booleans: use `== true` to distinguish from null
+
+## Control Flow & Readability
+- Guard clauses (early return with `is!`/inverted condition) to reduce nesting:
+  Bad: `if (state is Loaded) { /* nested */ }`
+  Good: `if (state is! Loaded) return; /* root level */`
+  Prefer `is!` over `!(x is Type)`.
+- No `== true`/`== false` on non-nullable booleans — use directly
+  Exception: nullable `bool?` may require `== true`
+- Avoid empty else blocks, empty statements
+- Use `.isEven` instead of `% 2 == 0`
+- Avoid literal-only boolean expressions
+- Join return with assignment when possible: `return value = compute();`
+
+## Performance
+- Avoid expensive operations in `build()` methods
+- Use `const` constructors for static/immutable widgets and objects
+
+## Constructors & Initialization
+- `late` for non-null variables initialized after construction
+- Factory constructors for complex object creation
+- Prefer initializing formals (`this.field`) over constructor body assignments
+- Super parameters: `Child(super.field)` instead of `Child(this.field) : super(field: field)`
+- Assert in initializer lists, not constructor body; always provide assert messages
+- Matching super parameters when overriding constructors
+- Avoid field initializers in const classes
+- Remove unused constructor parameters
+
+## Variables & Mutability
+- `final` for variables that don’t change; `final` in for-in loops
+- Prefer final + ternary over mutable + if-else:
+  Bad: `int val = x; if (cond) { val = y; }`
+  Good: `final int val = cond ? y : x;`
+  For complex conditions, extract into a separate method.
+- Avoid explicit initialization to null: `Type? variable;` not `Type? variable = null;`
+
+## Type Safety & Annotations
+- No `dynamic` — use explicit type annotations
+- Always declare return types explicitly
+- Use sealed classes for state management
+- Type annotate fields/top-level variables when inferred type is not obvious
+- Annotate parameter types on public API function declarations
+- Supply explicit type arguments when inference falls back to `dynamic`
+- Prefer explicit generic signatures on public APIs
+- Prefer typing uninitialized variables explicitly
+- Never specify return type for setters
+- Avoid types as parameter names
+- No `.runtimeType.toString()` — use pattern matching
+- Prefer integer literals over double when possible
+- Use `void` instead of `Null` for return types
+- Add `@redeclare` when redeclaring fields
+- No `.toString()` for types — use pattern matching
+- Avoid shadowing type parameters in generics
+- Avoid private typedefs — prefer public or inline
+- Use class modifiers (`sealed`, `base`, `final`, `interface`, `abstract`, `mixin`)
+
+## Data Processing
+- Functional methods (map, where, fold) for data transformations over imperative loops
+- `Duration` constructor with milliseconds for consistency
+- Cascade operators `..` for method chaining; avoid single cascade in expression statements
+
+## Utilities & Helpers
+- Getters for parameterless property access
+- `.byName()` for parsing enum from strings instead of hardcoded literals:
+  Bad: `case ‘text’: return TextParam.fromJson(json);`
+  Good: `switch (ParamType.values.byName(json[‘type’] as String)) { case ParamType.text: ... }`
+
+## Constants & Magic Numbers
+- No magic numbers — use named constants from `AppConstants`
+- Descriptive constant names for persistent resources: `_todoTableName` not `_kTableTodo`
+
+## Error Handling
+- User-friendly error messages in UI; never expose technical details
+- Proper error boundaries with fallback UI components
+- Specific `on` clauses: `on SpecificException catch (e) {}` — never generic `catch`
+- Never catch `Error` or subclasses — only `Exception`
+- `rethrow` not `throw e` to preserve stack trace
+- No control flow in finally blocks
+
+## Code Organization
+- Extract methods when nesting exceeds 3 levels
+- Meaningful variable names; DRY — eliminate duplication; extract common functionality
+- Avoid: self-assignments, unused wildcard variables, unnecessary overrides, unnecessary parentheses, unnecessary raw strings, unnecessary statements
+- Parameters treated as immutable (no assignments)
+- No returning null from void functions; no returning `this` (except builder pattern)
+- No setters without corresponding getters
+
+## Collections & Iterables
+- Collection literals `[]`, `{}` instead of constructors
+- `.contains()` over `.indexOf() != -1`
+- `.isEmpty`/`.isNotEmpty` over `.length == 0`/`.length > 0`
+- For-in in collections over `map().toList()`: `[for (var item in list) item * 2]`
+- `.whereType<T>()` for type filtering
+- Inline elements in literals instead of `.add()`/`.addAll()` after creation
+- `StringBuffer` for string building in loops
+
+## Formatting & Style
+- Order combinators (show, hide) in imports consistently
+- Avoid unnecessary `new`, redundant `const`, unnecessary constructor names
+- Leading newlines in multiline strings for readability
+
+## Operators & Methods
+- Use setters for property changes instead of methods when appropriate
+- Use type casting methods (.cast<T>(), .as) when available
+
+## Collections & Equality
+- Override `hashCode` when overriding `==`
+- Only override `==`/`hashCode` in immutable classes
+- Avoid null checks in equality operators
+
+## Imports & Libraries
+- Prefer relative imports for same directory structure; package imports only for external packages
+- Library annotations when creating library files; no dangling library doc comments
+- No private types in public API
+- No deprecated member use from same package; consistent deprecated versions
+- Package prefix in library names
+- No leading underscores in library prefixes or local identifiers
+- Add dependencies for all referenced packages
+- Never import from another package’s `src` directory
+- Keep import paths inside `lib/`; no `/lib/` or `../` segments
+
+## Switch & Pattern Matching
+- Exhaustive cases in switch expressions
+- No default cases on enums when all cases covered
+- Valid case patterns; no duplicate case values
+
+## Validation & Checks
+- No recursive getters (stack overflow risk)
+- No no-op operations on primitives
+- Check conditional URI existence
+- Avoid null checks on nullable type parameters; no null closures
+- Check unrelated types in collection methods
+- Validate environment variable usage
+
+## Testing
+- No parallel `flutter test` processes: suite is 4500+ tests; parallel runs (sub-agents, backgrounded shells) have OOM-crashed the Mac via stray `frontend_server_aot` processes (~600MB each) — a single `flutter test --coverage` run alone is safe
+- Mutation testing: manual here — point-edit `lib/` → run one `flutter test path/to/one_test.dart` → revert — not an automated sandbox runner, same memory-safety reason
+- Run tests: `run_tests` tool if available, otherwise `flutter test`
+- `package:test` for unit tests, `package:flutter_test` for widget tests, `package:integration_test` for integration tests (add as dev_dependency with `sdk: flutter`)
+- `package:checks` for assertions over default matchers; throw matchers instead of try-catch
+- Write testable code: dependency injection; keep business logic separate from framework code
+- Arrange-Act-Assert (Given-When-Then) pattern
+- Unit tests for domain/data/state; widget tests for UI; integration tests for end-to-end
+- Prefer fakes/stubs over mocks; use `mocktail` if mocks needed; avoid code generation for mocks
+- Each test must fail if production code regresses; skip trivial assertions
+- Wrap every suite in `group()` named after class/feature
+- Name tests with “should ...” phrasing
+- Aim for high test coverage
+
+## Class Member Order
+1. Static constants
+2. Class fields (final → regular)
+3. Constructor
+4. Getters/Setters
+5. Lifecycle methods (`initState`, `dispose`)
+6. `@override` methods
+7. Public methods
+8. Private methods
+
+Helper methods go after their corresponding section (public/private).
+Empty lines between logical groups; group related methods.

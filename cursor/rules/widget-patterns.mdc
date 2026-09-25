@@ -1,0 +1,57 @@
+---
+description: "Flutter widget patterns: composition, context safety, controller injection, layout, theming, and navigation."
+globs:
+alwaysApply: false
+---
+
+# Widget Pattern Rules
+
+## Composition
+- Create separate widget classes instead of methods that return widgets
+- Prefer composing smaller widgets over extending existing ones
+- No complex logic in `build()`, `onPressed`, or UI handlers — extract to methods
+
+## Container Replacement
+- Never use `Container` — use specific widgets:
+  - Empty: `SizedBox.shrink()` / `SizedBox.expand()`
+  - Color only: `ColoredBox`
+  - Decoration only: `DecoratedBox`
+
+## Context Safety
+- Always check `context.mounted` before context-dependent operations after async gaps
+- `addPostFrameCallback` only when truly necessary — extremely rare
+
+## Controller Injection
+- Inject controllers into context via providers (get from DI at composition root)
+- Access controllers from `context` in widget tree, not from DI directly
+- Pass callback functions to reusable widgets, not state managers or controllers
+- In dialogs/context changes: pass controller methods, not controllers
+
+## Theming & Styles
+- No hardcoded colors — use `Theme.of(context)`
+- Flutter colors: full 8-digit hex (AARRGGBB), not 6-digit
+- Centralized `ThemeData`; support light and dark themes
+- `ColorScheme.fromSeed()` for harmonious palettes
+
+## Navigation
+- Use `GoRouter` for declarative navigation, deep linking, web support
+- No `Navigator.push/pop` for app navigation
+- `Navigator` only for short-lived overlays (dialogs, temporary views)
+
+## Layout
+- `Expanded` to fill remaining space; `Flexible` to shrink-to-fit
+- `Wrap` when content would overflow Row/Column
+- `LayoutBuilder` for responsive decisions based on available space
+- `OverlayPortal` for dropdowns/tooltips on top of everything
+
+### Common Layout Errors
+- "RenderFlex overflowed": wrap children in `Flexible`/`Expanded` or set explicit constraints
+- "Vertical viewport was given unbounded height": `ListView` inside `Column` needs height constraint (`Expanded`, `SizedBox`)
+- "InputDecorator...unbounded width": constrain `TextField` with `Expanded` or `SizedBox`
+- "setState called during build": move to user callbacks or `addPostFrameCallback`
+- "ScrollController attached to multiple scroll views": use separate controller per scrollable
+
+## Accessibility
+- Color contrast ≥ 4.5:1
+- `Semantics` widget for screen reader labels
+- Test with TalkBack/VoiceOver

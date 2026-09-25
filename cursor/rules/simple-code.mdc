@@ -1,0 +1,116 @@
+---
+description: "Anti-overengineering and cognitive-load minimization. Always-on stance for writing, modifying, designing, and reviewing code. Mirrors .cursor/skills/simple-code/SKILL.md."
+globs:
+alwaysApply: true
+---
+
+# Simple Code (anti-overengineering)
+
+Cognitive load is the budget. The reviewer is the bottleneck, not the writer.
+Optimize for reading, not for hypothetical "future flexibility".
+
+## Mission
+
+- Each file: short, predictable, "diagonally readable" on one screen.
+- Same logic in one place; differences only at explicit extension points.
+- New abstractions only when current, named pain demands them.
+- Surprise budget per change: zero.
+
+## Core principles
+
+1. Direct first — shortest code that works *now*.
+2. No abstractions "for the future" — concrete pain only.
+3. Concrete domain types beat `Object` / `dynamic` / wide generics.
+4. One responsibility, one level — split only when reading improves.
+5. No compatibility shims — no aliases, typedef bridges, dual old/new paths.
+6. Explicit over magic — direct code beats clever code.
+7. Local change, local effect — no piggy-backed unrelated refactors.
+8. Layer discipline — UI in UI, domain in domain, data in data.
+9. Callbacks only when there is action — no mutation handlers in read-only / disabled paths.
+10. One source of truth — same fact lives in one place.
+11. Duplication beats wrong abstraction — rule of three before extracting.
+12. Delete over "just in case" — no dead code, no commented-out blocks.
+13. Verifiability is non-optional — format, analyzer, relevant tests after every change.
+14. Errors over silence — no empty `catch`, no swallowed `Future`, no hiding fallbacks.
+15. Each line earns its place — no dead args, no decorative parameters.
+16. Single writer for shared state — one owner per cache / file / queue.
+17. Locality of behavior — keep logic next to its use site.
+
+## Polymorphism over call-site `switch`
+
+Heterogeneous inputs → homogeneous output through one polymorphic call with an explicit generic upper bound. Variants live in implementations; the assembly site does not learn a new type when a new variant is added.
+
+```dart
+// Bad — switch + casts at the assembly site
+switch (template.type) {
+  case ParamType.text:
+    return TextParam.fromTemplate(id: id, template: template as TextParamTemplate, creator: creator);
+  // ... many more
+}
+
+// Good — base interface carries the operation
+final params = templates
+    .map((IParamTemplate<IParam> t) => t.createParam(const Uuid().v7(), creator))
+    .toList();
+```
+
+When behavior **truly** varies by type (different operation, different parameters), pattern matching on a `sealed` hierarchy is correct. Otherwise, push the variant into the implementation.
+
+## Do not over-generalize
+
+Keep concrete domain types and a direct data flow. Forbidden signals:
+- "for the future", "just in case", "for universality";
+- worse readability traded for nominal flexibility;
+- simple logic hidden behind extra interfaces / adapters / factories.
+
+Acceptance test: removing the abstraction makes the code shorter, clearer, no worse for testing or change → it should not exist.
+
+## Migration purity
+
+- No aliases, typedefs, temporary adapters, no parallel old/new branches "for compatibility".
+- Default: no stubs / placeholders. An explicit compile error is preferred over a hidden compatibility layer.
+- If the right step is too large for one iteration, leave a visible compile error and a `TODO`. Visible breakage on plan > silent compatibility.
+
+## Anti-patterns to flag in review
+
+- Switch-by-type at a call site that the base interface already covers.
+- Wrapper / adapter / factory created for a single caller.
+- Generic `<T>` whose body never branches on `T`.
+- Interfaces with one implementation and no real test substitution.
+- `dynamic` / `Object?` where a domain type exists.
+- Helpers that exist only to give a name to two inline lines.
+- Defensive checks for impossible states.
+- Empty `catch`, swallowed `Future`s, ignored `Result<T>`.
+- `// removed`, `// kept for compatibility`, commented-out branches.
+- Files past ~300 lines, functions past 25 lines, complexity past 10.
+- Read-only / disabled UI passing live mutation callbacks.
+- Diff that touches files unrelated to the stated task.
+
+## Decision rules
+
+Before adding an abstraction:
+1. Concrete pain it removes today?
+2. Is the code without it really worse, or just less symmetric?
+3. ≥2 real callers now, or only "eventually"?
+4. Does it speed up reading for someone unfamiliar with the change?
+
+If 1 and 3 cannot be answered concretely → do not add it.
+
+Before keeping a line:
+1. What breaks today if I delete it?
+2. Is that covered by a test? If not, why is it load-bearing?
+
+If both answers are "nothing visible" → delete.
+
+## Hard rules
+
+- No abstraction whose only justification is "future use".
+- No temporary compatibility layers between API generations.
+- No call-site switch on runtime type when the base interface exposes the operation.
+- No commented-out code or "removed" markers — delete or restore.
+- No duplicating the same fact in two places.
+- No silently expanding the diff scope beyond the requested task.
+
+## Performance is not over-engineering — but only with evidence
+
+Optimize against observed pain only; behavior understood and preserved first. Big-O: `performance.mdc` / `data-patterns.mdc`. Cyclomatic: existing 25-line / cc ≤ 10 limits.

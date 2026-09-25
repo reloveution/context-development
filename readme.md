@@ -1,4 +1,4 @@
-# Dart & Flutter AI Rules
+# Under Construction
 
 > A curated, evolving collection of rules and skills for AI assistants working with Dart and Flutter — designed to make LLM behavior more predictable and effective.
 

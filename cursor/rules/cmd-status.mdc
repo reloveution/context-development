@@ -1,0 +1,16 @@
+---
+description: "Command: session status report. Activate manually to get a summary of current progress."
+globs:
+alwaysApply: false
+---
+
+## Status Command
+
+Give a brief status report of the current session. Include:
+
+1. **Task** — what we are working on (goal, feature, bug)
+2. **Done** — what has been completed so far (list changed/created files with one-line description each)
+3. **Current state** — does the code compile? are there known issues?
+4. **Next** — what remains to be done, in priority order
+
+Run `git diff --stat` to get the actual list of changed files. Keep the report concise — no filler, no redundancy. Write in the same language the user has been using in this conversation.

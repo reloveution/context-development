@@ -1,0 +1,62 @@
+---
+description: "Mermaid diagram syntax rules for generating correct diagrams. Covers all diagram types with proper syntax."
+globs:
+alwaysApply: false
+---
+
+# Mermaid Diagram Rules
+
+## General
+- Use `flowchart TD/LR` (not deprecated `graph`)
+- Always declare diagram type on first line
+- Escape special characters in node labels with quotes: `A["text → with arrows"]`
+- Close all blocks: `subgraph`, `loop`, `alt`, `end`
+- Use `stateDiagram-v2` for state diagrams
+
+## Flowcharts
+```mermaid
+flowchart TD
+    A[Start] --> B{Decision}
+    B -->|Yes| C[Action 1]
+    B -->|No| D[Action 2]
+```
+- Node shapes: `[rectangle]`, `(rounded)`, `{diamond}`, `((circle))`, `([stadium])`
+- Arrows: `-->` (solid), `-.->` (dotted), `==>` (thick)
+- `flowchart TB` + `subgraph "Name"` for module/layer structure
+
+## Sequence Diagrams
+```mermaid
+sequenceDiagram
+    participant A as Client
+    participant B as Server
+    A->>B: Request
+    B-->>A: Response
+    loop Retry
+        B->>B: Validate
+    end
+```
+- Messages: `->>` (solid), `-->>` (dotted), `->` (sync)
+- Close `loop`, `alt`, `opt`, `par` with `end`
+
+## Class Diagrams
+- Visibility: `+` public, `-` private, `#` protected
+- Relations: `<|--` (inheritance), `*--` (composition), `o--` (aggregation)
+- Cardinality: `"1" --> "0..*"`
+
+## State Diagrams
+- Start/end: `[*]`; nest: `state StateName { ... }`
+
+## ER Diagrams
+- `||--o{` one-to-many, `||--||` one-to-one, `}o--o{` many-to-many
+- Attributes: PK, FK, UK markers
+
+## GitFlow
+- `gitGraph` → `branch`, `checkout`, `merge`, `commit id: "msg"`
+
+## When to Use
+- BLoC state → State Diagram
+- Clean Architecture layers → Module Structure (flowchart TB + subgraphs)
+- API calls/flows → Sequence Diagram
+- Navigation logic → Flowchart
+- Class relationships → Class Diagram
+- Database schema → ER Diagram

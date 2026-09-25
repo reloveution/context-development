@@ -1,0 +1,23 @@
+---
+description: "Error handling and logging patterns for Flutter applications. Covers exception handling, logging strategies, and user-friendly error messages."
+globs:
+alwaysApply: false
+---
+
+# Error Handling Rules
+
+## Result<T>
+- Use `Result<T>` for **all** business operations (including synchronous) — never throw in business logic
+- Convert caught exceptions to `Result<T>` failures immediately
+- `Result<T>` also works as UI feedback wrapper (snackbars, dialogs)
+
+## try-catch & Exceptions
+- `try-catch` only for external API calls and system operations
+- Use specific `on` clauses: `on SpecificException catch (e) {}` — never generic `catch`
+- Never catch `Error` or subclasses (like `AssertionError`) — only `Exception`
+- Use `rethrow` (not `throw e`) to preserve stack trace
+- Only throw `Error` subclasses for programming errors
+- Specific error types, not generic `Exception`
+- No control flow in `finally` blocks
+- Close sinks (`StreamController`, `IOSink`) after use
+- User-facing errors: friendly messages only, never expose technical details

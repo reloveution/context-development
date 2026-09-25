@@ -1,0 +1,107 @@
+---
+description: Rules for using the MCP (Multi-Context Processor) server for Dart/Flutter development, ML models, and web scraping.
+globs:
+alwaysApply: false
+---
+
+# MCP Servers Usage Rules
+
+## Priority
+- **Dart/Flutter packages** → `mcp_dart_pub_dev_search` first, always
+- **Web search** → `web_search` (firecrawl search currently unavailable)
+- **Scraping specific pages** → `mcp_firecrawl_scrape`
+- **ML models/datasets/papers** → Hugging Face MCP
+- **Code analysis** → `mcp_dart_analyze_files`
+
+---
+
+## Dart MCP Server
+
+### Key Commands
+- `mcp_dart_add_roots` — add project root before using workspace commands
+  - Format: `[{uri: "file:///absolute/path/to/project", name: "optional-name"}]`
+- `mcp_dart_analyze_files` — analyze project
+- `mcp_dart_dart_fix` — apply automatic fixes
+- `mcp_dart_dart_format` — format code
+- `mcp_dart_pub` — add/remove/upgrade packages
+  - Params: `command` (`add`|`get`|`remove`|`upgrade`), `packageName`, `roots`
+- `mcp_dart_pub_dev_search` — search pub.dev; supports `dependency:`, `topic:`, `publisher:` operators
+- `mcp_dart_run_tests` — run tests
+  - `testRunnerArgs`: `name`, `tags`, `platform`, `timeout`, `concurrency`, `fail-fast`, `coverage`
+  - Boolean params must be explicit `true`/`false`; hyphenated params as JSON strings
+- `mcp_dart_hot_reload` — hot reload running app (requires DTD connection)
+
+### DTD (Dart Tooling Daemon)
+- `mcp_dart_connect_dart_tooling_daemon` — requires URI from user; request new URI after connection loss
+- `mcp_dart_get_widget_tree`, `mcp_dart_get_selected_widget`, `mcp_dart_get_runtime_errors`
+- `mcp_dart_set_widget_selection_mode`, `mcp_dart_get_active_location`
+
+### Symbol Search
+- `mcp_dart_resolve_workspace_symbol` — fuzzy search symbols
+- `mcp_dart_hover` — info about symbol at cursor
+- `mcp_dart_signature_help` — function signature info
+
+---
+
+## Firecrawl MCP Server
+
+`firecrawl_search` is **currently unavailable** (503) — use `web_search` instead.
+
+### Commands
+1. `firecrawl_scrape` — single page
+   - Key params: `url`, `formats` (`markdown`|`html`|`rawHtml`|`screenshot`|`links`|`summary`), `onlyMainContent`, `includeTags`/`excludeTags`, `waitFor`, `timeout`, `mobile`, `maxAge` (cache in ms)
+   - Use `maxAge` for caching repeated requests (e.g., 172800000 for 2 days)
+
+2. `firecrawl_batch_scrape` — multiple URLs; same options as `scrape`
+   - Returns operation ID → check with `firecrawl_check_batch_status`
+
+3. `firecrawl_map` — discover URLs on site
+   - Params: `url`, `search`, `limit` (default 100), `includeSubdomains`, `sitemap` (`include`|`skip`|`only`)
+
+4. `firecrawl_crawl` — async crawl; use with caution (token overflow risk)
+   - Key params: `url`, `maxDiscoveryDepth`, `limit`, `excludePaths`/`includePaths`
+   - Check with `firecrawl_check_crawl_status`
+
+5. `firecrawl_extract` — structured data extraction
+   - Params: `urls`, `prompt` (required), `schema`, `systemPrompt`
+
+### Workflow
+1. For single page: `firecrawl_scrape`
+2. For multiple URLs: `firecrawl_batch_scrape` → `firecrawl_check_batch_status`
+3. For site discovery: `firecrawl_map` → `firecrawl_scrape`/`firecrawl_batch_scrape`
+4. For structured data: `firecrawl_extract` with schema
+
+### Troubleshooting
+- Scraping errors: try `onlyMainContent: true`
+- JS-heavy sites may not capture dynamic content
+- Automatic rate limiting with exponential backoff (3 attempts, 1s initial delay)
+
+---
+
+## Hugging Face MCP Server
+
+### Model/Dataset Discovery
+- `model_search` — params: `query`, `sort` (`trendingScore`|`downloads`|`likes`), `limit` (max 100), `author`, `library`, `task`
+- `dataset_search` — params: `query`, `sort`, `limit` (max 100), `author`, `tags`
+- `hub_repo_details` — params: `repo_ids` (max 10, format `author/name`), `repo_type`
+
+### Research & Documentation
+- `paper_search` — params: `query` (3-200 chars), `results_limit`, `concise_only` (use `true` for broad searches)
+- `hf_doc_search` — params: `query`, `product`; start with empty query for structure
+- `hf_doc_fetch` — params: `doc_url`, `offset` (for large docs)
+
+### Other
+- `space_search` — params: `query`, `limit`, `mcp` (filter MCP-enabled)
+- `gr1_flux1_schnell_infer` — image generation; params: `prompt` (max 60-70 words), `width`/`height` (256-2048), `num_inference_steps` (1-16, default 4)
+- `hf_whoami` — auth status (currently: `microgrampictures`)
+
+### Workflow
+1. Use filters (`author`, `task`, `library`) to narrow search
+2. After finding models → `hub_repo_details` for specs
+3. Papers: `concise_only: true` for broad topics → full abstracts for specific
+4. Docs: `hf_doc_search` → `hf_doc_fetch`
+
+### Troubleshooting
+- Auth errors: verify HF token with `hf_whoami`
+- Repo not found: check exact `author/name` format
+- If `repo_type` auto-detect fails, specify explicitly

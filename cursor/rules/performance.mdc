@@ -1,0 +1,23 @@
+---
+description: "Performance optimization rules for Flutter applications. Covers UI rendering, computational efficiency, and profiling."
+globs:
+alwaysApply: false
+---
+
+# Performance Rules
+
+- `ListView.builder` for large lists — never `Column`/`Row` with many children
+- `const` constructors for static widgets to reduce rebuild overhead
+- Avoid expensive operations in `build()` — use builders or separate widgets
+- `RepaintBoundary` for complex custom painters
+- Use isolates (`compute()`) for CPU-intensive operations
+- Lazy loading and pagination for large datasets
+- Profile with Flutter DevTools regularly
+
+## Big-O (data-flow, separate from cyclomatic)
+
+- Optimize only when behavior **understood and preserved**; small proven fix > rewrite.
+- On "analyze/audit/scan/report" — report only, no file edits unless implement asked.
+- Full catalog (transformations · safety · what-not-to-do): skill `flutter-performance`.
+- Scanner: `python3 ~/.cursor/skills/flutter-performance/scripts/analyze_complexity.py . --format markdown` (Dart-aware).
+- Record vs class (hot loop, constant-factor; tiebreaker, not a default type choice — outside hot loops semantics decide): hashing / `Map`/`Set` key → record; frequent `==` → data class; plain data → no difference.

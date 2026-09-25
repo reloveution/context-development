@@ -1,0 +1,19 @@
+---
+description: "Provider state-management guidelines: scoped rebuild strategies, proxy providers, lifecycle, and testing."
+globs:
+alwaysApply: false
+---
+
+## Provider Rules
+
+- Scope each provider to the narrowest subtree that consumes it
+- Always specify generic type argument: `Provider<MyType>`, `context.watch<MyType>()`
+- `ChangeNotifierProvider` when object needs automatic disposal by widget tree
+- `ProxyProvider` for objects that depend on other providers
+- `MultiProvider` to avoid deeply nested declarations
+- `context.watch<T>()` — subscribe and rebuild; `context.read<T>()` — one-off, no subscription
+- `context.select<T, R>()` / `Selector` — subscribe to specific state slice only
+- Place `Consumer` widgets as deep in the tree as practical
+- Don't instantiate provider objects from external mutable variables — use `create`/`update` callbacks
+- Access providers outside `build` only at lifecycle-safe points (`didChangeDependencies`, callbacks)
+- In tests: shallow provider wiring; inject mock/fake dependencies per test case
