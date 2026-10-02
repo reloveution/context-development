@@ -1,6 +1,6 @@
 ---
 name: critical-thinking
-description: Proactive critical-thinking discipline applied while forming an answer or plan — not after the fact. Use on every non-trivial task — design and architecture choices, debugging, root-cause analysis, code/security review, recommendations, claims about external systems (APIs, CLIs, libraries, versions), irreversible actions. Skip for purely mechanical work where the action is the answer (rename, format, single-token typo). Counters LLM failure modes — sycophancy toward user framing, anchoring on the first interpretation, single-hypothesis tunnel vision, plausible-but-unverified claims from training memory, jumping to a fix before understanding the cause. Pairs with `recheck` (reactive, post-answer audit).
+description: Applies proactive critical thinking to non-trivial work — design, debugging, review, recommendations, external-system claims and irreversible actions. Separate evidence from inference, test alternatives and calibrate confidence; skip mechanical edits. Pair with `recheck` when a post-work audit is required.
 ---
 
 # critical-thinking
@@ -92,20 +92,6 @@ Use language that matches what you actually checked:
 
 No false certainty. No hedge-everything cowardice. Name unverifiable assumptions explicitly so the user can confirm or correct them.
 
-## Intellectual standards (Paul–Elder, condensed)
-
-A useful answer scores well on most of these. Re-read your draft against them:
-
-- **Clarity** — could a reader misread this?
-- **Accuracy** — is each claim true (and verified where load-bearing)?
-- **Precision** — exact file/line/version/command, not vague gestures.
-- **Relevance** — does each part bear on the actual question?
-- **Depth** — does it address the real complexity, or skim it?
-- **Breadth** — are there other viewpoints/scopes that change the answer?
-- **Logic** — do the conclusions follow from the evidence?
-- **Significance** — is the most important issue addressed first?
-- **Fairness** — am I representing alternatives honestly, including the user's own view if I disagree?
-
 ## Hard rules
 
 - Never state an external-system fact (API, CLI, library, version, OS) from memory without flagging it as recalled — or verifying it in this turn.
@@ -116,19 +102,7 @@ A useful answer scores well on most of these. Re-read your draft against them:
 
 ## Output style
 
-This skill is **stance**, not output structure. Do **not** dump phase headers ("Phase 1: Frame…") into the user-facing reply. The reply should:
-
-- Surface uncertainty and assumptions visibly when load-bearing.
-- Name alternative hypotheses you considered (briefly) when the question has them.
-- Cite file paths / lines / sources for verified claims.
-- Disagree with the user's premise plainly when warranted.
-
-If the user asks for reasoning, provide a concise, verifiable rationale — facts,
-alternatives, assumptions, and conclusion — rather than a private
-chain-of-thought.
-
-## Relation to other skills
-
-- `recheck` — reactive audit after the fact. This skill is preventative.
-- Code and security review skills — domain-specific checklists. This skill is the meta-stance applied while running them: ≥2 hypotheses, evidence vs inference, pre-mortem, no sycophancy.
-- Simplicity and design-principle skills — content rules for the answer. This skill governs *how* the answer is reasoned out.
+This is a stance, not output structure: do not recite its phases. Surface
+load-bearing uncertainty, alternatives and verified paths or sources. If asked
+for reasoning, give concise evidence, assumptions and conclusion — never
+private chain-of-thought.

@@ -7,6 +7,15 @@ wrapper, bundled `node`, minified `index.js` — "bundle" below). Auth is
 separate from the IDE: `cursor-agent login`, `--api-key` / `--auth-token`, or
 `CURSOR_API_KEY` / `CURSOR_AUTH_TOKEN`; without it every subcommand fails.
 
+## Contents
+
+- Paths
+- Settings
+- Hooks
+- MCP and secrets
+- Measure
+- Probes
+
 ## Paths
 
 - Skills `~/.cursor/skills/`; project `.cursor/skills/`, `.agents/skills/`.
@@ -147,7 +156,7 @@ separate from the IDE: `cursor-agent login`, `--api-key` / `--auth-token`, or
   `cli-config.json` key, flag or env var for it (Cursor staff on the forum,
   2026-07-29).
 
-## Hooks (probe 2026-09-28 on 2026.09.26-dd393fe)
+## Hooks
 
 `~/.cursor/hooks.json` and a project's `.cursor/hooks.json` both run, deny
 wins (docs): `beforeShellExecution`, `afterFileEdit`. Payload keys are

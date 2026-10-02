@@ -28,6 +28,9 @@ books, articles, docs or a chat into a skill — read
 - Before writing, search the stances and neighbouring skills for the rule's
   key terms. Found → name the owner instead of restating the rule.
 - A repeated deterministic step → a script in the skill's `scripts/`.
+- When a coding skill has a real normal/critical-path trade-off, read
+  `references/coding-dispatch.md`. The dispatch belongs to that skill, not to
+  a stance or a project path.
 
 ## Frontmatter
 

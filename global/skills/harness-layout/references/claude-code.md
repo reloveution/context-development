@@ -2,6 +2,14 @@
 
 Checked on 2.1.282–2.1.283 (the CLI updates itself).
 
+## Contents
+
+- Paths
+- Behavior
+- Hooks
+- Sandbox
+- Probes
+
 ## Paths
 
 - Skills `~/.claude/skills/<name>/SKILL.md`; project `.claude/skills/`.
@@ -95,7 +103,7 @@ Checked on 2.1.282–2.1.283 (the CLI updates itself).
   `tool_input.command` a string. By the docs a timed-out hook does not block
   (default 600 s); top-level `{"decision": "block"}` is no longer documented.
 
-## Sandbox (probes 2026-09-29, 2.1.283)
+## Sandbox
 
 - Boundary (14.4.4): `sandbox` in `settings.json` — Bash writes only in cwd,
   `additionalDirectories`, `$TMPDIR` (`/tmp/claude-501`) and `allowWrite`

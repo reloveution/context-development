@@ -7,6 +7,14 @@ the history shows what was connected where, and a symlink replaced by a plain
 file shows up as a typechange (`T`). Replacing a copied dir with a symlink is
 one commit of the deletions and the symlink; the old copy stays in history.
 
+## Current connections
+
+| Harness | Stance | Core skills | Package skills | Hooks |
+|---|---|---|---|---|
+| Codex | symlink | symlinks | none globally; projects link them | `git_guard` symlink; retrust in `/hooks` after an entry edit |
+| Claude Code | symlink | symlinks | none globally; projects link them | `git_guard`, `dart_format.sh` symlinks |
+| Cursor CLI | `~/AGENTS.md` symlink; no rules | Claude's symlinks | none globally; projects link them | `git_guard`, `dart_format.sh` symlinks |
+
 ## `.gitignore` as a whitelist (Claude, Codex)
 
 - `/*`, then `!/<name>` per tracked entry — not `*`, or nested content stays

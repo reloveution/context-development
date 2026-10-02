@@ -35,3 +35,8 @@ same task, not once.
 
 Apply skill `critical-thinking` on every non-trivial task — design, debugging,
 review, recommendations, claims about external systems; skip mechanical edits.
+
+# Coding-skill dispatch
+
+When a coding skill applies, follow its normal/critical-path dispatch. Default
+to normal; take a critical-path branch only when the task supplies evidence.

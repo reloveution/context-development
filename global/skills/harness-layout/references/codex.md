@@ -4,6 +4,16 @@ Checked on CLI 0.156.1. Install: Homebrew cask `codex` →
 `/opt/homebrew/bin/codex` (the `codex-app` cask is the desktop app, a different
 product). Codex is to be dropped later — keep Codex-only files separate.
 
+## Contents
+
+- Paths
+- Cost per model call
+- Measure
+- Skills and commands
+- Sandbox
+- Hooks
+- Probes
+
 ## Paths
 
 - Global skills: `~/.codex/skills/` works (probe 2026-09-27), though the docs
@@ -97,7 +107,7 @@ schemas ride in every call of every iteration.
 - The first call's input is identical run to run; only the cached share varies
   with the provider cache.
 
-## Skills and commands (probes 2026-09-26)
+## Skills and commands
 
 - Unknown frontmatter fields are tolerated; `disable-model-invocation` is
   ignored — the model still invokes the skill.
@@ -115,7 +125,7 @@ schemas ride in every call of every iteration.
   `$name` Codex injects the body.
 - Custom prompts (`~/.codex/prompts/`, `/prompts:name`) are deprecated (docs).
 
-## Sandbox (probes 2026-09-28 and 09-29, 0.156.1)
+## Sandbox
 
 - Boundary (14.4.4): writes only in cwd, `/tmp`, `$TMPDIR` and
   `writable_roots` (`~/fvm`, `~/.pub-cache`); leaving it takes the user's
@@ -144,7 +154,7 @@ schemas ride in every call of every iteration.
 - `.git`, `.codex`, `.agents` inside a writable root stay read-only (docs;
   upstream issue #24461: `.agents` even through `--add-dir`) — not probed.
 
-## Hooks (probes 2026-09-28, 0.156.1)
+## Hooks
 
 - Sources: `hooks.json` or inline `[hooks]` next to each config layer —
   `~/.codex`, `<repo>/.codex` — and all of them run (docs). Inline hooks from
