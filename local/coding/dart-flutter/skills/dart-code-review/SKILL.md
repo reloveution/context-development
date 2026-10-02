@@ -1,54 +1,36 @@
 ---
 name: dart-code-review
-description: Code review checklist for PRs/MRs. Use when reviewing pull requests, examining code changes, or when the user asks for a code review.
+description: Reviews Dart and Flutter changes for language-specific correctness, generated sources, tests, and performance leads. Use when reviewing Dart code or applying a Dart review lens to a diff.
 ---
 
-# Code Review
+# Dart Code Review
 
-## Mindset
+Review the changed human-written Dart code in its file and feature context. This
+is the Dart-specific lens; `review-diff` owns the scope and summary of a current
+repository diff.
 
-- No assumptions — investigate implementation details before judging correctness
-- Be objective; devil's advocate approach, not automatic praise
-- Fetch documentation when unsure about package best practices
-- If a change remains unclear after investigation, flag it in the report
+## Check
 
-## Pre-Review
+- Compare public types, nullability, asynchronous behavior, errors, and resource
+  ownership with their callers and the behavior the change promises. Do not infer
+  correctness solely from a plausible diff.
+- Treat a suppression or local deviation from `analysis_options.yaml` as a
+  decision that needs a documented reason, not as a style preference.
+- Do not manually edit generated files. When a source or schema change requires
+  generation, check that the generated output is included and consistent.
+- For changed behavior, ask whether a focused test would fail if that behavior
+  regressed. Route test design to `flutter-testing` and mutation strength to
+  `dart-mutation-testing`.
+- Mark a performance candidate when a changed path adds nested traversal,
+  repeated lookup or I/O in a loop, or collection work in `build()`. It is a
+  lead, not proof: use `flutter-performance` to establish cost and safety before
+  recommending an optimization.
+- Route security-sensitive input, credentials, and network handling to
+  `flutter-security`; do not reduce that review to a checklist item.
 
-- Branch is feature/bugfix — not main/develop
-- Branch is up-to-date with target (main)
-- List all changed/added/deleted files
-- For every change: review commit title and connected components
+## Report
 
-## Per File
-
-- Correct directory and naming conventions
-- Clear single responsibility; reason for change is understandable
-- Readable names; correct logic; no missing edge cases
-- Modular, no unnecessary duplication
-- Errors/exceptions handled; no security concerns (input validation, no secrets)
-- No obvious performance issues
-- Public APIs and complex logic documented
-- Sufficient test coverage for new/changed logic
-- Matches project style guide
-- Generated files up-to-date and not manually edited
-
-## PR-Level
-
-- Change set focused and scoped to stated purpose
-- PR description accurately reflects changes
-- Tests cover new/changed logic; evaluate if tests can actually fail (not just mock checks)
-- CI passes
-
-## Big-O Lens
-
-Diff scan: nested loops · `.contains`/`.indexOf`/`.firstWhere` in loop · sort-in-loop · repo/HTTP/Drift call in loop (N+1) · `.where()`/`.map()`/`.sort()` in `build()`.
-
-Safety before proposing fix (full list in `flutter-performance`): size matters · ordering preserved · cache invalidation valid · batching preserves auth/tenant/order/page.
-
-On "analyze/audit/scan/report" — produce report, no file edits unless implement requested. Format: scope · findings (`file:line`, current pattern, complexity before→after, risk, tests) · `files modified: yes/no`.
-
-Scanner: run the one from skill `flutter-performance` — Dart-aware; leads, not proof.
-
-## Output
-
-Conclusions and recommendations per file. Constructive feedback with suggestions.
+For an analyze, audit, scan, or report request, do not edit files. Report each
+confirmed finding as `file:line` — current behavior, impact, and the missing
+test or evidence. Label an unchecked suspicion as a lead and a non-blocking
+style suggestion as `Nit`.

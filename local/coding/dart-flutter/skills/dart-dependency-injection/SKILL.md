@@ -1,60 +1,44 @@
 ---
 name: dart-dependency-injection
-description: Dependency injection patterns for Dart/Flutter applications. Use when configuring get_it, registering dependencies, using constructor injection, setting up composition root, and testing with mocks.
+description: Defines composition-root, lifetime, and test-isolation decisions for get_it in Dart and Flutter. Use when registering, resolving, scoping, or replacing dependencies.
 ---
 
 # Dart Dependency Injection
 
-## Composition Root
+Treat `get_it` as composition infrastructure, not a service locator available
+throughout application code. Resolve dependencies while wiring an object, then
+pass them through its constructor. A class that calls `getIt` hides its contract
+and makes its dependencies harder to test and replace.
 
-- `get_it` calls (`getIt.get<T>()`) only at app init (`main()` or setup function)
-- Never inside class constructors or methods
-- Exception: global UI services (e.g. audio player for button click sounds) -- document clearly, keep to absolute minimum
-- Resolve dependencies at composition root, pass to constructors when creating instances
+## Composition root
 
-```dart
-// Composition root (main.dart or setup function)
-final service = getIt<IService>();
-final repository = getIt<IRepository>(param1: service);
-final useCase = getIt<IUseCase>(param1: repository);
-final controller = MyController(useCase: useCase);
-```
+- Keep registration and resolution in startup or feature composition modules.
+  A factory may resolve its direct dependencies there; business, data, and UI
+  classes receive them as constructor arguments.
+- Register against the contract the caller needs when implementations may vary.
+  The registration must still expose the concrete lifetime and disposal owner.
+- A cycle in the registration graph is a design problem. Separate the shared
+  responsibility or introduce an explicit mediator; an interface alone does not
+  break a runtime dependency cycle.
 
-## Constructor Injection
+## Choose a lifetime
 
-- All dependencies through constructors: `MyClass(this.service, this.repository)`
-- Use abstract classes as interfaces, not concrete implementations
-- Enables swapping implementations in tests without overriding get_it
+- `registerFactory`: each resolution needs a new, short-lived instance.
+- `registerSingleton`: one already-created app-lifetime instance is required.
+- `registerLazySingleton`: one shared instance is needed, but creation can wait
+  until first use.
+- For a session, account, or feature lifetime, use a scope rather than silently
+  promoting its state to an app singleton. Define how that scope is left.
+- A registration that owns a database, controller, subscription, or other
+  resource must have a disposal path. Follow `dart-resource-management` for the
+  resource itself; `get_it` can invoke a disposal callback or `Disposable` when
+  a registration, scope, or container is reset.
 
-## Registration
+## Test isolation
 
-- Order: datasources -> repositories -> use cases -> controllers (leaf nodes first)
-- Factory: stateless services, new instance per resolution
-- Singleton: stateful services (repositories, API clients, databases), shared instance
-- Prefer instance-based singletons -- avoid static methods and lazy proxy wrappers
-
-## Lifecycle & Scoping
-
-- Dispose singletons that hold resources (database, StreamController)
-- Global singletons for app-wide services
-- Scoped providers (e.g. `RepositoryProvider`) for feature-specific dependencies in Flutter
-
-## Circular Dependencies
-
-- If A depends on B and B on A: extract shared interface, introduce mediator, or split responsibility
-- Circular registration causes runtime errors or infinite loops
-
-## Testing
-
-- Constructor injection enables easy mocking: `MyClass(mockService, mockRepository)`
-- No need to override get_it or register mocks globally for unit tests
-- Separate setup functions or parameters to switch implementations per environment (dev/staging/prod)
-
-```dart
-test('should do something', () {
-  final mockRepo = MockIRepository();
-  when(() => mockRepo.get()).thenAnswer((_) async => result);
-  final useCase = MyUseCase(mockRepo);
-  // test useCase
-});
-```
+- Prefer constructing the unit under test with fakes or mocks directly.
+- If a test exercises the composition root, register only its test dependencies
+  and `await getIt.reset()` in teardown so disposal completes before the next
+  test.
+- Do not use global reassignment as ordinary test setup; it conceals the
+  dependency graph and lets registrations leak between tests.

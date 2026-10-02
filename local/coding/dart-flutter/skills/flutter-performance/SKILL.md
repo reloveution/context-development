@@ -1,68 +1,43 @@
 ---
 name: flutter-performance
-description: Performance optimization for Flutter apps. Use when optimizing lists, build methods, const/keys, images, RepaintBoundary, isolates, or profiling with DevTools.
+description: Guides Flutter performance for a profiled frame, a hot path, or a complexity audit. Use when a frame janks, a list or data loop is expensive, or when reading analyze_complexity findings.
 ---
 
-# Flutter Performance
+# Flutter performance
 
-## Lists
-- `ListView.builder` / `GridView.builder` / `SliverList` for large lists — never `Column`/`Row` with many children
-- `const` constructors for list item widgets
-- Pagination: load in chunks, combine with builder
-- Lazy loading: load on demand (scroll/visibility)
+## Dispatch
 
-## Build Methods
-- No expensive work in `build()` — move to `initState`, `didChangeDependencies`, or cached values
-- Scope rebuilds: `Builder`, `ValueListenableBuilder`, `StreamBuilder`, `BlocBuilder`
-- Extract frequently rebuilt subtrees into separate widget classes
+**normal** — Leave the smallest clear implementation. A style preference, a folder name, or a scanner hit is not a reason to change it.
 
-## Const & Keys
-- `const` constructors for static widgets — reused across rebuilds
-- Keys for widgets that maintain identity across reorders: `ValueKey`, `ObjectKey`, `UniqueKey`
+**critical-path** — Only with a stated hot loop, a profile, or a demonstrated heavy list or data workload. Preserve behavior, name the evidence, then apply one change and check it. Missing evidence means report the candidate and do not edit.
 
-## Images
-- `Image.asset` — cached automatically
-- Network images: `cached_network_image` package
-- Don't reload same image on every rebuild
+Already the simple path: do not repeat a costly derivation in `build()`, and a mostly off-screen list uses a builder rather than a column of every child.
 
-## RepaintBoundary
-- Wrap complex custom painters — isolates repaint region from siblings/parent
-- Adds a compositing layer; profile before/after to validate benefit
+## Profiler
 
-## Isolates
-- `compute()` for CPU-intensive work: JSON parsing, image processing, batch transforms
-- Function and argument must be top-level or static (isolate can't share references)
+Use a profile build. Debug frame times are not release times. Mobile and desktop use the DevTools Performance view. Web timeline events go to Chrome DevTools, not that Flutter view.
 
-## Data Structures
-- Right structure for the job: List vs Set vs Map, growable vs fixed
-- Prefer O(1)/O(log n) over O(n) at scale
-- Cache expensive computations when inputs don't change
+Each frame is two bars: UI (Dart, `build`, the layer tree) and raster (GPU). Over about 16 ms at 60 Hz is jank, marked red. Dark red is shader compilation. Select the frame. Frame analysis names the expensive work. A slow UI bar goes to the CPU profiler. A slow raster bar is still caused by the Dart scene (`saveLayer`, overlapping opacity, clips, shadows). Turn on Track widget builds, Track layouts, or Track paints only for the phase you are chasing. Those options slow frames. The memory view answers retained size, not jank.
 
-## Profiling
-- Flutter DevTools: Timeline, CPU profiler, memory view
-- Identify: build time, layout, paint, rasterize bottlenecks
-- Profile before/after optimizations and periodically during development
+## Changes
 
-## Big-O Audit
+Apply only on the critical path, or when the user asked to act on a scanner finding. Read the function. The scanner line is a lead.
 
-Data-flow hot spots; separate from cyclomatic (skill `dart-crap-metric`).
+- Rebuild the widget that depends on the change, not its ancestors. `const` and keys only when identity across rebuilds is the measured problem. Mechanical `const` is the linter. `RepaintBoundary` only after a paint profile, then profile again: it adds a layer.
+- `compute()` for CPU work whose function and arguments are top-level or static. Do not send a Drift database (`flutter-drift`). Cyclomatic cost is `dart-crap-metric`.
+- Nested lookup: one `Map` or `Set`. Duplicate keys keep the existing rule (first, last, or all). Membership in a loop (`.contains`, `.indexOf`, `.firstWhere`): that `Set` is built once before the loop.
+- Sort in a loop: once outside, or a heap or binary search, only if the comparator has no loop-local state. Pairwise: sort and two pointers, a sweep, a spatial hash, or union-find.
+- A `build()` derivation is computed once. Memo dependencies are every semantic input, with no hidden in-place mutation.
+- N+1: one bulk, joined, or preloaded call. Keep auth, tenant, order, page, and retry. Query shape stays with `dart-drift` or `flutter-networking`.
 
-**Rule.** Optimize only when behavior is understood and preserved. Small proven fix > broad rewrite. Tests before semantics change.
+Skip the edit when the input is tiny, public order or identity would change, the cache has no invalidation, dedup would drop distinct items, a batch would drop auth, tenant, soft-delete, page, or sort, JSON would become a map key, or `O(n)` would become `O(n log n)` while a larger bottleneck remains. After an edit: a narrow test, then the analyzer. A micro-benchmark only on the hot path.
 
-**On "analyze/audit/scan/report"** — structured report, no file edits unless user asks to implement/fix/refactor. Read the flagged function before listing it; estimate before→after from code, not the raw match. Report = scope · stack · findings (`file:line`, current pattern, complexity before→after, why-equivalent, risk, tests) · patch status: proposed/implemented/blocked · `files modified: yes/no`.
+## Audit
 
-**Transformations:**
-- Nested lookup loops: `O(a·b) → O(a+b)` — Map/Set index of B once; on dup keys keep first/last/all-match
-- Membership in loop (`.contains`/`.indexOf`/`.firstWhere`): `O(n·m) → O(n+m)` — `Set` once before loop
-- Sort in loop: `O(n²·log n) → O(n·log n)` — sort once outside · heap · binary; only if comparator has no loop-local state
-- Pairwise: `O(n²) → O(n·log n)` — sort+two pointers · sweep line · spatial hash · union-find
-- Derivation in `build()`: per-rebuild → once — Bloc state · memo selector · `ListView.builder`; memo deps = every semantic input, no hidden in-place mutation
-- N+1 I/O (call in loop): N → 1 — bulk · joined Drift · preload — preserve auth/tenant/order/page/retry
+On "analyze", "audit", "scan", or "report", do not edit unless the user also asks to implement. Report scope, stack, findings (`file:line`, pattern, complexity before and after, why equivalent, risk, tests), status `proposed`, `implemented`, or `blocked`, and `files modified: yes` or `no`.
 
-**Safety before:** size matters · ordering preserved · identity not public · cache invalidation valid · dedup keeps distinct · batching preserves auth/tenant/soft-delete/page/sort.
+Run `python3 scripts/analyze_complexity.py . --format markdown` from the project root. The path is relative to this skill. An empty report is not proof: inspect `build()` and repository, Drift, and HTTP loops by hand.
 
-**Safety after:** narrow test → analyzer/build · micro-bench on hot path · localized patch.
+## Sources
 
-**Don't:** complex for tiny input · cache w/o invalidation · JSON-as-key · break public ordering · `O(n) → O(n·log n)` without removing larger bottleneck.
-
-**Scanner:** `python3 scripts/analyze_complexity.py . --format markdown` from the project root; the script path is relative to this skill's dir, not the project — Dart-aware first pass; leads, not proof. Reports nothing → inspect hot paths, `build()`, repo/Drift/HTTP loops by hand.
+Dispatch: coding-skill dispatch, user decision 2026-10-02. <https://docs.flutter.dev/perf/best-practices> and <https://docs.flutter.dev/tools/devtools/performance>.

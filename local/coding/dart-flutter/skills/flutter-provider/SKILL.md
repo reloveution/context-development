@@ -1,43 +1,54 @@
 ---
 name: flutter-provider
-description: Provider state management for Flutter. Use when exposing values with Provider, ChangeNotifierProvider, FutureProvider, StreamProvider, scoping with context.watch/read/select, ProxyProvider, or testing provider-based state.
+description: Provider API for Flutter — Provider, ChangeNotifierProvider, watch, read, and select. Use when wiring or reading a Provider ancestor. Choosing Provider versus Bloc is flutter-state-management.
 ---
 
 # Flutter Provider
 
-## Provider Types
-- **Provider** — exposes a value (no change notification)
-- **ChangeNotifierProvider** — auto-disposes notifier when removed from tree
-- **FutureProvider** — exposes Future result
-- **StreamProvider** — exposes Stream values
-- **ProxyProvider** — depends on other providers; refreshes when upstream changes
-- **Provider.value** — for existing instances managed elsewhere
+`context.watch`, `context.read`, and `context.select` here look up a
+`Provider` ancestor. The same names on a `BlocProvider` are `flutter-bloc`.
 
-Scope each provider to the narrowest subtree that consumes it.
+## Which provider
 
-## Accessing State
+| Type | Use |
+| --- | --- |
+| `Provider` | Expose a value that does not notify |
+| `ChangeNotifierProvider` | Create a `ChangeNotifier` and dispose it with the provider |
+| `Provider.value` / `ChangeNotifierProvider.value` | Pass an instance owned elsewhere; `.value` does not dispose it |
+| `FutureProvider` / `StreamProvider` | Expose the latest result of a future or stream |
+| `ProxyProvider` / `ChangeNotifierProxyProvider` | Rebuild this value when an upstream provider changes |
 
-| Method | Where | Purpose |
-|---|---|---|
-| `context.watch<T>()` | `build()` | Subscribe and rebuild on change |
-| `context.read<T>()` | Callbacks, event handlers | One-off access, no subscription |
-| `context.select<T, R>()` | `build()` | Subscribe to specific state slice |
+Scope the provider to the narrowest subtree that reads it. Pass an explicit
+type. Since provider 6.0, `watch<T>()` and `watch<T?>()` resolve to the same
+deepest provider; the nullable form returns null when that provider is
+absent instead of throwing.
 
-- Always specify generic type: `Provider<MyType>`, `context.watch<MyType>()`
-- Place `Consumer`/`Selector` as deep in the tree as practical
-- Outside `build`: access only at `didChangeDependencies` or in callbacks — not in constructors or `initState`
+`ValueListenableProvider`'s default constructor was removed in
+5.0.0-nullsafety.0. `.value` came back in 5.0.0-nullsafety.1 and is still
+there in 6.1.5. Release 6.1.5 did not change that class. A
+`ValueListenableBuilder` remains the local way to read a `ValueNotifier`
+without a provider.
 
-## Lifecycle
-- Use `create`/`update` callbacks — don't instantiate from external mutable variables
-- `ChangeNotifierProxyProvider` when notifier depends on other providers
-- `MultiProvider` to avoid nested declarations; for very large apps consider incremental mounting during splash
+## Where to read
 
-## Diagnostics
-- Add `DiagnosticableTreeMixin` to provided objects for DevTools readability
+| Call | Where |
+| --- | --- |
+| `context.watch<T>()` | `build`, rebuilds on notification |
+| `context.select<T, R>(selector)` | `build`, rebuilds when the selector result changes |
+| `context.read<T>()` | Callbacks and `didChangeDependencies`, no subscription |
 
-## Migration
-- `ValueListenableProvider` is deprecated — use `ValueListenableBuilder` + `Provider.value`
+Do not call these in `initState` or a constructor. The inherited lookup is
+not available there yet.
 
-## Testing
-- Shallow provider wiring per test; override providers to inject mock/fake dependencies
-- Scope to what each test needs, keep setup minimal
+## Boundaries
+
+Choosing this over Bloc or `setState` is `flutter-state-management`.
+Test doubles and where they are registered are `dart-mocktail` and
+`dart-dependency-injection`. Pump the widget under the provider you mean;
+`flutter-testing` owns the rest of the test.
+
+## Sources
+
+<https://pub.dev/packages/provider/changelog>: nullable lookup in 6.0.0;
+`ValueListenableProvider.value` restored in 5.0.0-nullsafety.1. `select`
+takes a selector: `context.select((Person p) => p.name)`.

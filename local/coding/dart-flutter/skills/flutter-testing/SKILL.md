@@ -1,142 +1,49 @@
 ---
 name: flutter-testing
-description: Flutter testing guidance covering unit tests, widget tests, integration tests, mocktail mocking, and plugin testing. Use when writing tests, mocking dependencies, debugging test errors, or running tests.
+description: Chooses and writes Flutter unit, widget, and integration tests. Use when deciding the test type, pumping a widget, or fixing a hanging pump or MissingPluginException. Mocktail is dart-mocktail; coverage is flutter-coverage-gate.
 ---
 
-# Flutter Testing
+# Flutter testing
 
-## Test Types
+Use the cheapest test that can fail when the behavior changes. A pure
+decision is a unit test. A widget contract is a widget test. A flow that
+needs the real app binding is an integration test. Run the file or directory
+that covers the change. The project stance owns whether a full suite is
+allowed.
 
-| | Unit | Widget | Integration |
-|---|---|---|---|
-| Confidence | Low | Higher | Highest |
-| Speed | Fast | Fast | Slow |
-| Dependencies | Few | More | Most |
+Assert the observable result. Do not assert a private method.
 
-Many unit + widget tests for coverage, enough integration tests for critical flows.
+## Widget tests
 
-## Mocktail (Project Standard)
+Pump a `MaterialApp` when the widget needs a theme, direction, or
+localization. After a tap, text entry, or drag, pump a frame. Use
+`pumpAndSettle` only when every animation ends. A looping ticker makes
+`pumpAndSettle` time out; pump frames instead.
 
-Project uses **Mocktail**, NOT Mockito.
+## Platform channels
 
-- `Fake` for asserting outcomes; `Mock` for verifying interactions
-- Extend `Mock`, no manual overrides in subclass
-- `registerFallbackValue` for every non-nullable custom type before stubbing
-- Sync: `when(() => mock.method()).thenReturn(value)`
-- Async: `when(() => mock.method()).thenAnswer((_) async => result)`
-- Failure: `when(() => mock.method()).thenThrow(error)`
-- Verify: `verify(() => ...)`, `verifyNever(() => ...)`, `.called(n)`
-- Supply all named params; `any(named: 'param')` when value irrelevant
-- Stub every dependency method expected in test — avoid MissingStub
-- Prefer real collaborators or fakes when asserting outcomes
+`MissingPluginException` means the test reached a platform channel. Mock that
+channel for the test and clear the handler afterwards, or inject a fake so
+the channel is never called. `flutter-drift` owns the in-memory database used
+when the channel would have been `path_provider`.
 
-```dart
-class MockRepo extends Mock implements IRepository {}
+## Integration tests
 
-void main() {
-  late MockRepo mockRepo;
-  setUpAll(() => registerFallbackValue(SomeType()));
-  setUp(() => mockRepo = MockRepo());
+Call `IntegrationTestWidgetsFlutterBinding.ensureInitialized()` before the
+test. On a device or desktop, run that file with `flutter test`. A web
+target still uses `flutter drive` with `test_driver/integration_test.dart`.
+A project stance may prefix the command with its SDK runner.
 
-  test('should fetch data', () async {
-    when(() => mockRepo.getData()).thenAnswer((_) async => Result.success(data));
-    final result = await useCase.execute();
-    verify(() => mockRepo.getData()).called(1);
-  });
-}
-```
+## Boundaries
 
-## Unit Tests
+`dart-mocktail` owns mocks, fallbacks, and `when` / `verify`.
+`flutter-coverage-gate` owns `flutter test --coverage` and gates.
+`dart-mutation-testing` owns checking that a test can fail.
+`flutter-bloc` owns `bloc_test`. `flutter-provider` owns pumping under a
+provider.
 
-- `package:test/test.dart`, Arrange-Act-Assert pattern
-- `group('ClassName', () { ... })` — wrap every suite
-- Name tests: "should ..." phrasing
-- Test behavior (output/state), not implementation (private methods)
-- `package:checks` for assertions
+## Sources
 
-For matchers, exception testing, streams, fake clock: [unit-testing.md](references/unit-testing.md)
-
-## Widget Tests
-
-- Wrap in `MaterialApp(home: ...)` when widget requires theme/navigation context
-
-**Finders:**
-
-| Finder | Usage |
-|---|---|
-| `find.text('Hello')` | By exact text |
-| `find.textContaining('ello')` | By partial text |
-| `find.byType(ElevatedButton)` | By widget type |
-| `find.byKey(ValueKey('id'))` | By key |
-| `find.byIcon(Icons.add)` | By icon |
-| `find.ancestor(of: ..., matching: ...)` | By ancestor |
-
-**Matchers:** `findsOneWidget`, `findsNothing`, `findsWidgets`, `findsNWidgets(n)`
-
-**Interactions:**
-```dart
-await tester.tap(finder);
-await tester.drag(finder, Offset(0, -300));
-await tester.enterText(finder, 'text');
-await tester.fling(finder, Offset(0, -500), 10000);
-await tester.longPress(finder);
-await tester.scrollUntilVisible(finder, 500.0);
-await tester.pump();           // single frame
-await tester.pumpAndSettle();  // all animations complete
-```
-
-For orientation, forms, accessibility, animations: [widget-testing.md](references/widget-testing.md)
-
-## Integration Tests
-
-Setup: `integration_test` SDK dependency + test driver.
-
-```dart
-IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-testWidgets('user flow', (tester) async {
-  await tester.pumpWidget(const MyApp());
-  // interact and verify
-});
-```
-
-For performance profiling, CI/CD config: [integration-testing.md](references/integration-testing.md)
-
-## Platform Channel Mocking
-
-```dart
-setUp(() {
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(
-    const MethodChannel('your.plugin.channel'),
-    (MethodCall methodCall) async {
-      if (methodCall.method == 'getVersion') return '1.0';
-      return null;
-    },
-  );
-});
-tearDown(() {
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(
-    const MethodChannel('your.plugin.channel'), null,
-  );
-});
-```
-
-For plugin project testing: [plugin-testing.md](references/plugin-testing.md)
-
-## Common Test Errors
-
-- **MissingPluginException** — mock the method channel (see above)
-- **TimeoutException / pumpAndSettle hangs** — use `pump()` if animation loops; increase timeout for long ops
-- **Widget not found** — call `pumpAndSettle()` for async; verify correct finder type/text
-- **No MaterialApp** — wrap widget in `MaterialApp(home: ...)` in test
-
-## CLI
-
-```bash
-flutter test                           # all tests
-flutter test test/my_test.dart         # specific file
-flutter test --name "should fetch"     # specific test
-flutter test integration_test/         # integration
-flutter test --coverage                # with coverage
-```
+Widget binding and `pumpAndSettle`: <https://api.flutter.dev/flutter/flutter_test/WidgetTester-class.html>.
+Channel mocks: <https://api.flutter.dev/flutter/flutter_test/TestDefaultBinaryMessenger/setMockMethodCallHandler.html>.
+Integration binding: <https://api.flutter.dev/flutter/integration_test/IntegrationTestWidgetsFlutterBinding-class.html>.

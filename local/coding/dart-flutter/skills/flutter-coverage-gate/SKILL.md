@@ -1,113 +1,103 @@
 ---
 name: flutter-coverage-gate
-description: Layered test-coverage thresholds for Flutter projects (domain/data/bloc/widgets) and how to enforce them. Use when the user asks to "raise coverage", "set a coverage gate", "what's covered and what's not", "coverage threshold", or wants to verify a feature is properly tested before merge.
+description: Measures Flutter test coverage, layers exclusions and per-area gates when the project defines them, and ties coverage to mutation and CRAP. Use when raising coverage, setting a gate, or reporting what is covered — not for general test design.
 ---
 
 # Flutter Coverage Gate
 
-Coverage by itself is not a quality signal — but **layered targets** are
-useful: they encode where tests bring value (pure logic) versus where
-they bring noise (UI). This skill defines the thresholds and the workflow
-to reach and verify them.
+Line coverage counts execution, not assertion quality. It is useful only when the
+project records **which paths matter**, **what to exclude**, and **numeric targets
+per area** in its own CI script, config, or testing policy — not as a universal
+bar.
 
-Always pair coverage with mutation testing
-(skill `dart-mutation-testing`): a clean coverage gate without mutation
-is theater.
+A passing line-coverage gate alone is weak evidence — spot-check changed behavior
+with `dart-mutation-testing`. Prioritize complex, weakly covered units with
+`dart-crap-metric` when function-level complexity and coverage align on the same
+callable; a file percentage alone is not CRAP.
 
-## Targets per layer
+## Measure
 
-| Layer | Path pattern | Line coverage | Branch coverage |
-|---|---|---|---|
-| Domain (entities, value objects, use cases) | `lib/features/**/domain/**` | ≥ 95% | ≥ 90% |
-| Data (repositories, datasources, mappers) | `lib/features/**/data/**` | ≥ 80% | ≥ 70% |
-| BLoC / Cubit | `lib/features/**/presentation/bloc/**`, `**/cubit/**` | ≥ 80% | ≥ 70% |
-| Widgets / pages | `lib/features/**/presentation/widgets/**`, `**/pages/**` | best-effort | — |
-| DI assembly, generated, `main.dart` | `lib/di/**`, `*.g.dart`, `*.freezed.dart`, `lib/main.dart` | excluded | excluded |
-
-Rationale:
-- Domain has no I/O, no framework — testing it is cheap and high-value.
-- Data layer interacts with external systems; some error branches need
-  integration tests rather than unit ones, hence lower bar.
-- BLoCs are state machines — testing transitions is feasible and worthwhile.
-- Widgets rarely benefit from line coverage; favor golden tests and
-  widget tests for behavior, not lines.
-
-## Workflow
-
-1. **Run tests with coverage**:
+1. Run tests with coverage (default output path):
    ```bash
    flutter test --coverage
    ```
-   Output: `coverage/lcov.info`.
+   Produces `coverage/lcov.info` (line hits). For branch data, the project's
+   Flutter toolchain must support and enable branch collection (for example
+   `flutter test --coverage --branch-coverage` when available); do not assume
+   branch percentages unless that flag is part of the project's documented
+   workflow.
 
-2. **Filter excluded files** before measuring (avoid `main.dart`,
-   generated, DI):
+2. Remove files the project deliberately excludes from the gate (typical
+   candidates: `main.dart`, DI/bootstrap-only folders, `*.g.dart`,
+   `*.freezed.dart`, generated localization). Example filter shape:
    ```bash
    lcov --remove coverage/lcov.info \
-     'lib/main.dart' \
-     'lib/di/**' \
-     '**/*.g.dart' \
-     '**/*.freezed.dart' \
-     -o coverage/lcov.cleaned.info
+     'lib/main.dart' 'lib/di/**' '**/*.g.dart' '**/*.freezed.dart' \
+     -o coverage/lcov.filtered.info
    ```
+   Keep the exclude list versioned next to the project's thresholds.
 
-3. **Per-layer report**: split `lcov.cleaned.info` by path prefix and
-   compute coverage per layer. A small Dart script in
-   `tool/coverage_gate.dart` is the right home — checked in, runnable
-   via `dart run tool/coverage_gate.dart`.
+3. Split the filtered report by **path prefixes that match this repo's layout**
+   (for example `lib/features/**/domain/**`, `**/data/**`,
+   `**/presentation/bloc/**`, `**/cubit/**`, widget/page folders). Prefixes
+   and targets are project decisions — copy them from the checked-in gate script
+   or policy, not from this skill.
 
-4. **Fail the gate** if any layer is below its threshold. Report:
-   - layer, target, actual, gap;
-   - top-5 lowest-covered files in that layer (for prioritization).
+4. Compare each area's line (and branch, if collected) percentage to that
+   area's recorded target. On failure, report area, target, actual, gap, and the
+   lowest-covered files in that area for prioritization.
 
-5. **Add tests** in priority order: domain → data → bloc → widgets.
+5. When closing gaps, add tests in typical payoff order: pure domain → data →
+   Cubit/Bloc → widgets. What to assert in each layer belongs to
+   `flutter-testing`, `dart-data-patterns`, and `flutter-bloc`.
 
-6. **Verify honesty** with `dart-mutation-testing` on the changed files.
+`flutter-testing` owns test types, pumping, and assertions; this skill owns
+**coverage measurement and gate policy** once the project defines it.
 
-## What to test, by layer
+## Layering rationale (not numeric defaults)
 
-### Domain
-- Every public method of every use case (`Usc` suffix).
-- Every non-trivial getter / computed property of entities.
-- Every constructor validation path that returns a `Result.err`.
-- Boundary cases: empty, single, max, min, zero, negative.
+When defining targets, weight areas by test cost and signal:
 
-### Data
-- Mappers in both directions (DTO → entity, entity → DTO), including
-  null/optional fields.
-- Repository: success path, each `Result.err` branch, cache fallback.
-- Datasource: response parsing for success and failure shapes.
-  Network errors covered by an injected fake `IHttpClient`.
+| Area | Typical signal |
+| --- | --- |
+| Pure domain logic | High — cheap unit tests, few framework deps |
+| Data / IO boundaries | Medium — more branches need fakes or integration tests |
+| Cubit/Bloc | Medium — state sequences are testable (`flutter-bloc`) |
+| Widgets / pages | Low for line % — favor behavior or golden tests over line padding |
 
-### BLoC / Cubit
-- Each event/method emits the expected sequence of states.
-- Idempotency: emitting the same event twice is safe.
-- Error states are emitted (not silently swallowed).
-- Use `bloc_test` from `flutter-bloc` skill.
-
-### Widgets
-- Rendering with required props.
-- Tap/long-press/scroll → callback invoked.
-- Error state UI present when state is `error`.
-- Skip pixel-level assertions unless the widget is a design-system
-  primitive — use golden tests there.
+Widgets are often **best-effort** or excluded from numeric gates; that choice
+belongs in project policy.
 
 ## Anti-patterns
 
-- Hitting the threshold by adding tests that import the file but
-  do not assert anything meaningful. Mutation testing exposes this.
-- Excluding inconvenient files from the lcov filter to "fix" the gate.
-  Excluded files must match the table above; document any addition.
-- One giant test that exercises an entire flow and pads coverage —
-  prefer many small focused tests; failures point to the cause faster.
-- Treating widget coverage as equally important as domain coverage.
-  It is not. Time spent on widget line coverage usually yields less
-  than the same time on domain mutation score.
+- Empty or assertion-free tests that only import files to raise percentages —
+  mutation testing exposes this.
+- Expanding the exclude list to pass a gate without updating documented policy.
+- One long flow test that pads coverage instead of focused tests that localize
+  failures.
+- Treating line coverage as proof of correctness or as a substitute for CRAP or
+  mutation checks on risky changes.
+- Chasing widget line coverage while domain or state-machine gaps remain — the
+  same effort usually buys more signal from domain tests and mutation checks.
 
-## Enforcement options
+## Enforcement
 
-- **Local pre-push**: `tool/coverage_gate.dart` invoked from a git
-  pre-push hook.
-- **CI**: same script invoked as a step; fails the build on gap.
-- **Reporting**: emit a Markdown summary checked in to PR description
-  (layer / target / actual table).
+How the gate runs (local script, CI job, PR comment) is project-specific. The
+skill does not prescribe hook names or paths until they exist in the repository
+under review.
+
+## Boundaries
+
+- **dart-mutation-testing** — manual mutant cycle on focused behavior; not a
+  coverage percentage.
+- **dart-crap-metric** — function-level risk ranking when complexity and
+  coverage map to the same unit; not a release gate by itself.
+- **flutter-architecture** — folder layout conventions (deferred in this repo's
+  plan); gate prefixes must follow the app on disk.
+
+## Sources
+
+Flutter `flutter test --coverage` and optional `--branch-coverage` /
+`--coverage-path` (`package:flutter_tools` test command). LCOV filtering and
+HTML reports via system `lcov` (for example
+`genhtml coverage/lcov.filtered.info -o coverage/html`) or project tooling.

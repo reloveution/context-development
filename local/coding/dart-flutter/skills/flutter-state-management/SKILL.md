@@ -1,37 +1,21 @@
 ---
 name: flutter-state-management
-description: State management for Flutter. Use when choosing patterns, implementing BLoC/Cubit, built-in (Streams, Futures, ValueNotifier), ChangeNotifier, or Provider.
+description: State management choices for Flutter. Use when comparing or combining approaches (local vs app state, Provider, built-in, BLoC/Cubit), not for flutter_bloc or Provider API detail.
 ---
 
-# Flutter State Management
+# Flutter state management
 
-## General Rules
-- Separate ephemeral (local) and app state
-- Keep state immutable; use `copyWith` for updates
-- No global variables for state
-- Single state management approach per widget
-- Serialize state for app lifecycle / restoration
+Pick one update path per widget. An app may use more than one library; a
+widget does not mix them for the same value.
 
-## BLoC
-- Trigger changes via events from UI callbacks: `() => bloc.add(FormSubmitted(user))`
-- Don't wrap `emit()` in try-catch
-- Don't use `setState` inside BLoC
-- Don't mix `BlocBuilder` with `setState`
+| Situation | Owner |
+| --- | --- |
+| Ephemeral state of one widget | That widget's `State`, or a `ValueNotifier` beside it |
+| A value several widgets read, with no event stream | `flutter-provider` |
+| Feature state driven by events or async transitions | `flutter-bloc` |
+| An existing `Future`, `Stream`, or `ValueNotifier` and no library was requested | `FutureBuilder`, `StreamBuilder`, or `ValueListenableBuilder` |
 
-## Cubit
-- Interact via public methods: `cubit.loadData()`
-- Business logic inside cubit methods; each method emits correct state
-- No bloc-style events in cubits
-
-## Built-in (only when explicitly requested)
-- `ValueNotifier` + `ValueListenableBuilder` — simple local single-value state
-- `StreamBuilder` — async event sequence
-- `FutureBuilder` — single async result
-
-## ChangeNotifier (only when explicitly requested)
-- Scope `ChangeNotifierProvider` to narrowest consuming subtree
-- Private mutable fields, expose getters or unmodifiable views
-- `notifyListeners()` after each mutation
-- `Consumer<T>` around smallest dependent subtree; unrelated children in `Consumer.child`
-- `Provider.of<T>(context, listen: false)` for imperative actions without rebuilds
-- `ListenableBuilder` for listening to any `Listenable`
+Do not put feature state in a global variable. `flutter-bloc` owns Cubit/Bloc
+mechanics. `flutter-provider` owns Provider types and `context.watch` /
+`read` / `select` on a Provider ancestor. Immutable updates and DTO mapping
+belong to `dart-data-patterns`.

@@ -1,22 +1,25 @@
 ---
 name: flutter-security
-description: Security best practices for Flutter apps. Use when storing credentials, validating input, securing network/API, or preventing XSS.
+description: Flutter security for credentials, TLS, and logs. Use when storing a secret, checking certificates, or deciding what may be logged.
 ---
 
-# Flutter Security
+# Flutter security
 
-## Storage
-- Never store sensitive data in `SharedPreferences` or plain text
-- `flutter_secure_storage` for API keys, tokens, credentials
+Put API keys, tokens, and credentials in `flutter_secure_storage`. Do not put
+them in `SharedPreferences`, source, or a skill.
 
-## Input & Display
-- Validate all user inputs on both client and server
-- Sanitize data before displaying (XSS prevention)
+Send traffic over HTTPS. Do not install a certificate callback that accepts
+every certificate. Certificate pinning is a separate product decision with a
+rotation plan, not the default.
 
-## Network
-- HTTPS only for all communications
-- Certificate pinning for critical APIs
-- Proper session management and token refresh
+`Text` does not interpret HTML. Do not HTML-escape ordinary widget strings.
+Sanitize only a source that a web view or an HTML widget will interpret.
 
-## Logging
-- Never log passwords, tokens, personal data
+Do not log passwords, tokens, session cookies, or raw authorization payloads.
+`flutter-networking` owns request retry and single-flight token refresh.
+`dart-error-handling` owns how a failure is represented.
+
+## Sources
+
+<https://pub.dev/packages/flutter_secure_storage>.
+`HttpClient.badCertificateCallback`: <https://api.dart.dev/dart-io/HttpClient/badCertificateCallback.html>.

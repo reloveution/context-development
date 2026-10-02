@@ -1,99 +1,53 @@
 ---
 name: flutter-widget-patterns
-description: Flutter widget patterns. Use when building UI, fixing layout errors, theming, composing widgets, GoRouter, accessibility, or assets.
+description: Fixes Flutter layout, theming, and accessibility. Use when a constraint overflows, a theme token is missing, or a widget needs semantics. Routing is flutter-navigation; wide layouts are flutter-adaptive-ui.
 ---
 
-# Flutter Widget Patterns
+# Flutter widget patterns
 
-## Composition & Build
+Screen routes belong to `flutter-navigation`. Window and parent-space layout
+belong to `flutter-adaptive-ui`. Long lists, rebuild scope, and `compute()`
+belong to `flutter-performance`.
 
-- Create separate widget classes, not widget-returning methods
-- Compose smaller widgets; don't extend existing ones
-- Extract complex logic from build/onPressed into separate methods
-- Pass callbacks (events/controller methods) to reusable widgets, not state managers
-- In dialogs/context changes: pass controller methods, not controllers
-- Controllers: inject via providers at composition root; access from context in widget tree
+## Composition
 
-## Context & Keys
+Make a widget class when the piece has its own identity. Pass callbacks into
+a reusable widget. After an async gap, check `context.mounted` before using
+that context. Do not call `setState` or `showDialog` during `build`.
 
-- Check `context.mounted` before context-dependent operations after async gaps
-- `addPostFrameCallback` — extremely rarely, only where truly necessary
-- Use keys for widgets that need to maintain state across rebuilds
+## Constraints
 
-## Container Replacement
+| Failure | Fix |
+| --- | --- |
+| RenderFlex overflow | Give the loose child a `Flexible` or `Expanded` |
+| Vertical viewport unbounded | Give the scroll view a bounded height (`Expanded` or a sized box) |
+| InputDecorator unbounded width | Bound the `TextField` the same way |
+| RenderBox not laid out | Pass constraints down; do not read size before layout |
 
-- Empty: `SizedBox.shrink()` / `SizedBox.expand()`
-- Color only: `ColoredBox`
-- Decoration only: `DecoratedBox`
-- Multiple properties: combine specific widgets
+One `ScrollController` per scroll view. Detach it before attaching it to
+another. An empty gap is a `SizedBox`. A color alone is a `ColoredBox`. A
+decoration alone is a `DecoratedBox`.
 
-## Layout Errors
+## Theme
 
-- **RenderFlex overflowed:** wrap unbounded Row/Column children in Flexible/Expanded
-- **Vertical viewport unbounded:** ListView in Column — wrap in Expanded/SizedBox
-- **InputDecorator unbounded width:** TextField — wrap in Expanded/SizedBox
-- **ScrollController multiple:** one per scroll view; detach before reuse
-- **RenderBox not laid out:** add size constraints or wrap in constraint-passing widgets
-- Don't call setState/showDialog in build; use callbacks
-- Flutter Inspector for constraint chain analysis
+Read colors and type from `Theme.of(context)`. A `Color` literal is
+`0xAARRGGBB`; a six-digit web hex is transparent. A custom token is a
+`ThemeExtension` with `copyWith` and `lerp`, registered on `ThemeData.extensions`.
+State-dependent theme values use `WidgetStateProperty`. Declare a font in
+the project and reference that family. Do not add `google_fonts` unless the
+project already uses it.
 
-## Row/Column & Layout
+## Accessibility and images
 
-- **Expanded:** fills remaining main axis space
-- **Flexible:** shrinks to fit; don't combine with Expanded in same parent
-- **Wrap:** overflow moves to next line
-- **SingleChildScrollView:** fixed content larger than viewport
-- **ListView/GridView:** always use builder constructor for long lists
-- **FittedBox:** scale/fit child within parent
-- **LayoutBuilder:** responsive decisions based on available space
-- **Stack + Positioned/Align:** precise placement by anchoring to edges
-- **OverlayPortal:** dropdowns, tooltips on top of everything
+Ordinary text aims at a 4.5:1 contrast ratio. Check the screen with a larger
+text scale and with TalkBack or VoiceOver. A control that is not already
+described by its text gets a `Semantics` label.
 
-## GoRouter Navigation
+A network image has an error builder so a failed load is visible. Declare
+every bundled asset in the pubspec and use that path.
 
-- `go_router` for declarative navigation, deep linking, web support
-- Configure `redirect` for authentication flows
-- Navigator only for short-lived overlays (dialogs, temporary views)
-- Setup: `GoRouter(routes: [...])` with `MaterialApp.router(routerConfig: router)`
-- Path parameters: `state.pathParameters['id']`
+## Sources
 
-## Theming
-
-- Centralized `ThemeData`; define theme + darkTheme; themeMode for toggle
-- `ColorScheme.fromSeed()` for harmonious palettes
-- Full 8-digit hex for Flutter colors (AARRGGBB)
-- No hardcoded colors — use `Theme.of(context)`
-
-### ThemeExtension
-
-- For custom tokens not in ThemeData
-- Extend `ThemeExtension<T>`; implement `copyWith` and `lerp`
-- Register in `ThemeData.extensions`; access via `Theme.of(context).extension<T>()!`
-
-### WidgetStateProperty
-
-- `resolveWith` for state-dependent values (pressed, hovered, etc.)
-- `WidgetStateProperty.all` when same for all states
-
-### Fonts
-
-- `google_fonts` package; one or two font families
-- Use typographic scale: displayLarge, titleLarge, bodyMedium, labelSmall
-
-## Performance
-
-- `ListView.builder` / `SliverList` for long lists (lazy loading)
-- `compute()` for CPU-intensive operations to avoid blocking UI thread
-- `RepaintBoundary` for expensive custom painters
-
-## Accessibility
-
-- Color contrast >= 4.5:1 for text
-- Dynamic text scaling: test with increased system font size
-- `Semantics` widget for descriptive labels
-- Test with TalkBack (Android) / VoiceOver (iOS)
-
-## Network Images
-
-- `cached_network_image` for network images
-- Always include `loadingBuilder` and `errorBuilder`
+Constraints: <https://docs.flutter.dev/ui/layout>.
+`ThemeExtension`: <https://api.flutter.dev/flutter/material/ThemeExtension-class.html>.
+Contrast: <https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html>.

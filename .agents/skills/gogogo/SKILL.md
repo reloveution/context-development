@@ -1,21 +1,26 @@
 ---
 name: gogogo
-description: Starts or resumes work on this repo's plan.md — reads the plan work rules, the plan and the harness map, reports state, proposes the next item. Use when the user calls it by name or asks to start or resume work on the plan.
-argument-hint: [item number]
+description: Continues this repository's plan — reports its state and selects the next open item. Use when the user calls it by name or asks to start or resume plan work.
+argument-hint: "[item number]"
 ---
 
-Read and internalize the plan work rules and the referenced documents:
+Choose the next plan item without changing it or beginning its work. Read:
 
-1. **Rules**: read `plan-work-rules.md` — memorize all principles, plan rules, execution standards and the post-item audit.
-2. **Plan**: read `plan.md` — the full item list, order, dependencies («вход для п.N»), current progress.
-3. **Harness map**: read `global/skills/harness-layout/SKILL.md` — where config lives in the harnesses, how to connect and edit it; open its `references/` as the item needs.
+1. `plan-work-rules.md` for the governing rules.
+2. `plan.md` for order, dependencies and status.
+3. `harness-layout`; read its references only when the selected item needs their
+   architecture, connection or harness-specific facts.
 
-After reading all three documents:
+Report briefly:
 
-1. **Confirm understanding** — briefly list the key rules you will follow (2-3 sentences).
-2. **Report current state** — which items are done, which are in progress (open subitems), and which were moved after their blocker.
-3. **Propose starting point** — find the first uncompleted item (`[ ]`) in `plan.md` in file order (a blocked item is moved right after its blocker and keeps its number), for an item with subitems take its first open subitem in file order, state its number and description, and propose to begin work from there. If the user added an item number after the skill name, start from it instead.
+1. Confirm understanding in 2–3 sentences, including the rules that constrain
+   this step.
+2. Closed items, open work and postponed items relevant to the next choice.
+3. The first uncompleted item (`[ ]`) in file order; for a parent with subitems,
+   choose its first open subitem. State its number and description. If the user
+   supplied an item number, choose it instead.
 
-The «Исполнение» and «Аудит после пункта» sections of `plan-work-rules.md` bind every item taken from the plan.
+Stop for the user's manual review. The selected item's work follows the
+execution and post-item audit sections of `plan-work-rules.md`.
 
 Write the response in the same language the user has been using in this conversation.

@@ -1,57 +1,64 @@
 ---
 name: dart-mocktail
-description: Mocktail testing guidelines for Dart/Flutter. Use when creating mocks, fakes, stubbing async/sync, verifying interactions, registerFallbackValue, or avoiding MissingStub errors.
+description: Mocktail-specific Dart test-double mechanics. Use when declaring a Mocktail mock or fallback fake, stubbing or verifying a Mocktail call, matching arguments, registering fallback values, or fixing an unstubbed-call type error.
 ---
 
 # Dart Mocktail
 
-## Fake vs Mock
+## Declare doubles
 
-- **Fake:** lightweight custom behavior subset; use when asserting on outcomes (result values, state).
-- **Mock:** use when verifying interactions (specific methods called, args, call count).
-- Prefer real collaborators or fakes over mocks -- outcome-based tests are more robust.
-
-## Mock Creation
-
-- Extend `Mock` -- never add manual overrides or concrete implementations.
+Use a bare `Mock` subclass for a dependency whose calls need stubbing or
+verification; Mocktail supplies the implementation.
 
 ```dart
 class MockIRepository extends Mock implements IRepository {}
 ```
 
+Use a `Fake` as a fallback value for an argument matcher:
+
+```dart
+class FakeRequest extends Fake implements Request {}
+```
+
 ## Fallback Values
 
-- Register fallback values for every non-nullable custom type used in matchers (`any()`, `captureAny()`, `captureThat()`).
-- Must run before stubbing or verifying -- typically in `setUpAll()`.
+- Before using `any()` or `captureAny()` for a non-nullable custom parameter,
+  register a fallback value. Primitive types are already registered.
+- Register each type once, before the matcher is used; `setUpAll()` keeps that
+  global registration out of individual tests.
 
 ```dart
 setUpAll(() {
-  registerFallbackValue(MyDomainType());
-  registerFallbackValue(Result.success(dummy));
+  registerFallbackValue(FakeRequest());
 });
 ```
 
 ## Stubbing
 
-- Sync: `when(() => mock.method()).thenReturn(value)` for fixed return.
-- Sync dynamic: `thenAnswer((invocation) => value)` for computed response.
-- Async: `thenAnswer((_) async => result)` -- preferred over `thenReturn(Future.value(...))`.
-- Failure: `thenThrow(error)` for error branches.
-- Stub every dependency method the test expects to execute -- unstubbed calls cause `MissingStubError`.
+- Use `thenReturn(value)` for a fixed synchronous response and `thenAnswer(...)`
+  for a computed or asynchronous response.
+- Use `thenThrow(error)` to make a call fail.
+- Stub every invoked member with a non-nullable return type. An unstubbed
+  Mocktail member returns `null`, which causes a type error at that call site.
 
 ## Verification
 
-- `verify(() => mock.method())` -- method was called.
-- `verifyNever(() => mock.method())` -- method was not called.
-- `verify(() => mock.method()).called(n)` -- assert exact call count.
+- `verify(() => mock.method())` records a matching call; append `.called(n)`
+  for its count.
+- `verifyNever(() => mock.method())` asserts that no matching call occurred.
 
 ## Parameters and Matchers
 
-- Supply all named parameters in both stubs and verifies; use `any(named: 'param')` when the exact value is irrelevant.
-- `any()` -- match any positional value.
-- `captureAny()` -- capture argument for later assertion.
-- `captureThat(matcher)` -- capture when matcher matches.
+- Include named arguments in the stub or verification closure; use
+  `any(named: 'param')` when their value is irrelevant.
+- `any()` matches a positional argument; `captureAny()` records one for a
+  later assertion; `captureAny(that: matcher)` records only a matching argument.
 
-## Best Practices
+## Boundary
 
-- Custom types used in matchers should have consistent `==` and `toString` for deterministic assertions.
+Choose a real collaborator, fake, or mock by test intent; structure assertions;
+and handle unit, widget, integration, and plugin tests with **flutter-testing**.
+
+## Source
+
+Mocktail package documentation: <https://pub.dev/packages/mocktail>

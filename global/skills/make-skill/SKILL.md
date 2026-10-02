@@ -77,10 +77,12 @@ read, while every skill's description is paid in every session — whole in
 some harnesses, in others out of a fixed catalog budget that each new entry
 cuts for all (`harness-layout`).
 
-- A part gets its own skill only with its own trigger: a task that needs it
-  without the rest, or a project that links it without the rest. A skill with
-  no trigger, contract or test of its own folds back into its owner; one file
-  serving unrelated triggers splits (SkillSeam).
+- Give a part its own skill only with an independent trigger: a task that needs
+  it without the rest, or a project that links it without the rest. Each sibling
+  then needs a distinct outcome and description whose opening words route that
+  request; interchangeable descriptions mean one skill with references. A skill
+  with no trigger, contract or test of its own folds back into its owner; one
+  file serving unrelated triggers splits (SkillSeam).
 - Over-splitting misroutes: routing accuracy falls about 3 points per
   doubling of the library, and the misses land on look-alike neighbours
   (Scaling Laws of Skills); a task served by 4+ skills gains about half of

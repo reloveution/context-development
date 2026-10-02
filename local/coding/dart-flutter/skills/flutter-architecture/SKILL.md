@@ -20,6 +20,5 @@ description: Flutter app architecture — Clean Architecture layers, BLoC/Cubit,
 
 - **dart-data-patterns** — DTOs, serialization, repositories, sync
 - **dart-dependency-injection** — get_it, composition root, constructor injection
-- **dart-design-principles** — SOLID, polymorphism, composition
 - **dart-error-handling** — Result type, exception vs Error
 - **flutter-bloc** — BLoC/Cubit state management in presentation layer
