@@ -54,10 +54,12 @@ schemas ride in every call of every iteration.
   `model_instructions_file` (replacement, not append). Trimmed copy and
   pristine original: `~/.codex/model-instructions/`. After an upgrade re-dump
   the original and re-apply the edits by diff.
-- The skills catalog is budgeted by `skills.max_context_tokens` (default 2% of
-  the window) and descriptions may be shortened: front-load the trigger words.
-  At a 555K window 41 entries went in whole (2026-09-27); on 2026-09-28 all
-  45 checked of 46, 15.2k chars.
+- The skills catalog is budgeted by `skills.max_context_tokens`: by the docs
+  at most 2% of the window, 8,000 chars when the window is unknown; past it
+  descriptions are shortened first, then skills left out with a warning —
+  front-load the trigger words. Whole so far: 41 entries at a 555K window
+  (2026-09-27); JE 45 entries, 14.8k chars, context-development 10, 5.2k
+  (`debug prompt-input`, 2026-10-02).
 - `<plugins_instructions>` (~208 tokens) is not injected in every run.
 - Feature flags: `codex features list|enable|disable <name>` (writes
   `[features]`); install health: `codex doctor`.

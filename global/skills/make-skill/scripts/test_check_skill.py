@@ -25,6 +25,17 @@ def named(name):
     return only(f"name: {name}\ndescription: D."), name
 
 
+def referenced(text):
+    return {
+        "SKILL.md": skill(GOOD, "Read `references/long.md` for detail.\n"),
+        "references/long.md": text,
+    }
+
+
+def long_reference(top, bottom):
+    return referenced(top + "x\n" * 100 + bottom)
+
+
 OK = [
     only(GOOD),
     described('"Topic: list. Use when x."'),
@@ -57,6 +68,14 @@ OK = [
         "SKILL.md": skill(GOOD, "Read `references/b.md` when needed.\n"),
         "references/b.md": "B.\n",
     },
+    {"SKILL.md": skill(GOOD, "a" * 20000 + "\n")},
+    long_reference("## Contents\n- Alpha\n- Beta\n", "## Alpha\n## Beta\n"),
+    long_reference(
+        "## Contents\n1. [Alpha](#alpha)\n* **Beta** — b\n",
+        "## Alpha\n## Beta\n",
+    ),
+    long_reference("", "```\n## Not a heading\n```\n"),
+    referenced("x\n" * 99 + "## Edge\n" + "x\n" * 10),
 ]
 
 ERROR = [
@@ -125,6 +144,13 @@ ERROR = [
 WARNING = [
     ("over 400", described("a" * 401)),
     ("over 500", {"SKILL.md": skill(GOOD, "x\n" * 501)}),
+    ("over 5000", {"SKILL.md": skill(GOOD, "a" * 20004 + "\n")}),
+    ("contents list", long_reference("", "## Late\n")),
+    ("contents list", long_reference("Probes run often.\n", "## Probes\n")),
+    (
+        "contents list",
+        long_reference("## Contents\n- Alpha\n", "## Alpha\n## Beta\n"),
+    ),
     (
         "never read",
         {"SKILL.md": skill(GOOD), "references/c.md": "C.\n"},

@@ -126,7 +126,11 @@ Checked on 2.1.282–2.1.283 (the CLI updates itself).
 - Traces: `~/.claude/projects/<path>/`.
 - The model's skill list: in the trace `<session>.jsonl`, the entry with
   `attachment.type: skill_listing` — its `content` holds one
-  `- name: description` line per entry, commands included; our 40
-  descriptions came whole at 64 entries, 22.5k chars (2026-09-28). The
-  `stream-json` init `skills` is another set: no commands, plus built-ins the
-  model is not shown.
+  `- name: description` line per entry, commands included. Every description
+  came whole on 2.1.286 (`-p`, 2026-10-02): context-development 27 entries,
+  14.9k chars, of them ours 5 — 2.4k, built-ins and claude.ai account skills
+  22 — 12.5k; JE 66 entries, 23.6k, ours 40 — 10.6k. By the docs the
+  listing gets 1% of the window, `description` plus `when_to_use` is cut at
+  1,536 chars, and past the budget the least-invoked skills lose their
+  descriptions first (not probed). The `stream-json` init `skills` is another set: no commands,
+  plus built-ins the model is not shown.

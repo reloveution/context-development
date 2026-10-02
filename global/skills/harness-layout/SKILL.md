@@ -87,6 +87,14 @@ projects hold **symlinks** into it, never copies.
 - A skill is a short `SKILL.md` plus `references/` read on demand; scripts live
   inside the skill dir and are referenced relative to it — such a script runs
   in all three harnesses (probe 2026-09-25).
+- Every listed skill's description rides in every model call. Claude and
+  Codex list descriptions whole; Cursor fits its catalog into ≈ 20k chars and
+  caps every description at one length that falls as entries grow — 480
+  chars at 42 entries, 125 at 77 (2026-10-02). In a Flutter project with 35
+  package skills linked, its 40 entries — core and its own skill included —
+  take 10.6k chars of every Claude call and 12.2k of every Codex call (≈ 2.7k
+  and 3k tokens). Hence a project links only the skills it needs; numbers and
+  probes — in the references.
 - Skill text and the shared stance `agents-stance.md` are harness-neutral,
   since several harnesses read the same file: an action, not a tool name ("search the web", not `WebSearch`);
   no harness paths, invocation syntax (`/name`, `$name`), placeholders

@@ -16,9 +16,8 @@ books, articles, docs or a chat into a skill — read
 
 ## One home per rule
 
-- Needed on every task and not inferable → the stance; needed on demand → a
-  skill. A new skill only for distinct trigger conditions; otherwise a
-  reference in the skill that owns the topic.
+- Needed on every task and not inferable → the stance; needed on demand → the
+  skill that owns the topic; a new skill only on the terms of Structure.
 - Before writing, search the stances and neighbouring skills for the rule's
   key terms. Found → name the owner instead of restating the rule.
 - A repeated deterministic step → a script in the skill's `scripts/`.
@@ -52,8 +51,6 @@ books, articles, docs or a chat into a skill — read
   a test, a validator script — stays.
 - Keep requirements apart from defaults and examples: in a mixed list the
   model may take an example for a requirement.
-- Gotchas, exact thresholds and output formats stay in `SKILL.md`: the model
-  may not open a reference for them.
 - One term per concept; concrete examples; nothing time-bound ("until
   August"); no tutorials, install guides, changelogs or READMEs.
 - Harness-neutral text: an action, not a tool name ("search the web"); no
@@ -65,11 +62,31 @@ books, articles, docs or a chat into a skill — read
 
 ## Structure
 
+Split inside a skill before splitting it out: a reference costs nothing until
+read, while every skill's description is paid in every session — whole in
+some harnesses, in others out of a fixed catalog budget that each new entry
+cuts for all (`harness-layout`).
+
+- A part gets its own skill only with its own trigger: a task that needs it
+  without the rest, or a project that links it without the rest. A skill with
+  no trigger, contract or test of its own folds back into its owner; one file
+  serving unrelated triggers splits (SkillSeam).
+- Over-splitting misroutes: routing accuracy falls about 3 points per
+  doubling of the library, and the misses land on look-alike neighbours
+  (Scaling Laws of Skills); a task served by 4+ skills gains about half of
+  what 2–3 give (+10.1 against +19.0, SkillsBench 1.1). Skills that answer one
+  request or always load together merge, their parts becoming references.
+- `SKILL.md` holds what every use needs — decision rules, gotchas, exact
+  thresholds, output formats: on-demand files helped least where success hung
+  on those (SkillJuror). A reference read on every use belongs in the body.
 - `SKILL.md` stays short: a standard-length skill beat a comprehensive one
-  (+21.5 against +0.7 points, SkillsBench 1.1). The 500-line body is a
-  ceiling, not a target.
-- `references/`: one level from `SKILL.md`, each named there with when to read
-  it; one topic per file; past ~100 lines, a contents list on top.
+  (+21.5 against +0.7 points, SkillsBench 1.1). The body ceiling — 500 lines
+  or ~5000 tokens — is not a target.
+- `references/` hold what only some uses need: a subtopic, long examples, a
+  checklist, API detail. Each is named in `SKILL.md` with when to read it — an
+  unnamed file is never read; one level from `SKILL.md` — a file reached
+  through another may be read only in part; one topic per file; past ~100
+  lines, a contents list on top.
 - `scripts/`: inside the skill dir and called relative to it, never through
   `../`; for another skill's script, name that skill. Say whether to run a
   script or read it. A script handles its own errors and has a test.
@@ -93,8 +110,9 @@ books, articles, docs or a chat into a skill — read
 
 - Run `python3 scripts/check_skill.py <skill-dir>...`, the path relative to
   this skill's dir: zero errors, and read every warning.
-- By hand: the first ~100 chars of the description carry the triggers; after
-  a rename or delete, no hit for the old name.
+- By hand: the first ~100 chars of the description carry the triggers; no
+  other skill's description answers the same request; after a rename or
+  delete, no hit for the old name.
 - A new skill or a changed description: one live run of one trigger phrase in
   a harness that loads the skill, from an empty dir outside any repo (probe
   recipes — `harness-layout`). A claim about harness behavior holds only after

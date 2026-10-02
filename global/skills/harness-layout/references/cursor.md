@@ -49,8 +49,12 @@ separate from the IDE: `cursor-agent login`, `--api-key` / `--auth-token`, or
   elements totalled ≈19.5k chars at 76–110 entries (`store.db`, 10 chats
   2026-09-25…28). Most descriptions are cut to one length plus `...`,
   falling as entries grow — 116 chars at 78 entries, 50 at 110 — and
-  absolute paths eat the same budget. Past the budget, more skills cost no
-  tokens but shorten every description: trigger words go first.
+  absolute paths eat the same budget. The budget binds early: 19.5k chars at
+  42 entries in context-development, descriptions cut to 480 chars with the
+  `...`; 20.4k at 77 in JE, cut to 125, paths 7.3k of it (2026.10.01-14929f9,
+  2026-10-02). Past the
+  budget, more skills cost no tokens but shorten every description: trigger
+  words go first.
 - Frontmatter that is not strict YAML leaves the description empty
   (`<agent_skill fullPath="…" />`): a plain description holding `: ` did so
   for `critical-thinking` and `flutter-navigation` in all 10 chats, while

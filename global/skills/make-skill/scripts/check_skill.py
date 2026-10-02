@@ -30,6 +30,9 @@ NAME_MAX = 64
 DESCRIPTION_MAX = 1024
 DESCRIPTION_BUDGET = 400
 BODY_MAX_LINES = 500
+BODY_MAX_TOKENS = 5000
+CHARS_PER_TOKEN = 4
+PREVIEW_LINES = 100
 NAME_PATTERN = re.compile(r"[a-z0-9]+(-[a-z0-9]+)*")
 KEY_LINE = re.compile(r"([A-Za-z0-9_-]+):(?: (.*))?")
 BLOCK_SCALAR = re.compile(r"[>|][-+]?")
@@ -39,6 +42,8 @@ FRONTMATTER = re.compile(r"---\n(.*?)\n---(?:\n|$)", re.DOTALL)
 LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
 FENCE = re.compile(r"\s*(```|~~~)")
 INLINE_CODE = re.compile(r"`[^`]*`")
+HEADING = re.compile(r"#{1,6} +(.+?)[ #]*")
+CONTENTS_ENTRY = re.compile(r"\s*(?:[-*+]|\d+\.|#{1,6})\s+[\[*_`]*(.*)")
 PLAIN_FORBIDDEN_START = set("{},#&*!|>%@`")
 INSTRUCTION_FILES = {"claude.md", "agents.md"}
 
@@ -220,16 +225,71 @@ def tree_errors(root):
     return errors
 
 
-def orphan_warnings(root, skill_text):
+def headings(lines):
+    found, fenced = [], False
+    for number, line in enumerate(lines):
+        if FENCE.match(line):
+            fenced = not fenced
+        elif not fenced:
+            match = HEADING.fullmatch(line)
+            if match:
+                found.append((number, match.group(1)))
+    return found
+
+
+def contents_warnings(path, shown):
+    lines = Path(path).read_text(encoding="utf-8").splitlines()
+    entries = [
+        match.group(1).lower()
+        for match in map(CONTENTS_ENTRY.fullmatch, lines[:PREVIEW_LINES])
+        if match
+    ]
+    hidden = [
+        text
+        for number, text in headings(lines)
+        if number >= PREVIEW_LINES
+        and not any(entry.startswith(text.lower()) for entry in entries)
+    ]
+    if not hidden:
+        return []
+    return [
+        f"{shown}: headings below line {PREVIEW_LINES} missing from a list "
+        f"above it ({len(hidden)}, first '{hidden[0]}') — a partial read "
+        "misses them: put a contents list on top"
+    ]
+
+
+def reference_warnings(root, skill_text):
     references = os.path.join(root, "references")
     warnings = []
     for folder, _, files in os.walk(references):
         for name in sorted(files):
-            shown = os.path.relpath(os.path.join(folder, name), root)
+            path = os.path.join(folder, name)
+            shown = os.path.relpath(path, root)
             if shown not in skill_text:
                 warnings.append(
                     f"{shown}: not named in SKILL.md — never read"
                 )
+            if name.endswith(".md") and os.path.isfile(path):
+                warnings += contents_warnings(path, shown)
+    return warnings
+
+
+def body_warnings(body):
+    warnings = []
+    lines = body.count("\n")
+    if lines > BODY_MAX_LINES:
+        warnings.append(
+            f"body is {lines} lines, over {BODY_MAX_LINES} — move "
+            "detail to references/"
+        )
+    tokens = len(body) // CHARS_PER_TOKEN
+    if tokens > BODY_MAX_TOKENS:
+        warnings.append(
+            f"body is ~{tokens} tokens (chars/{CHARS_PER_TOKEN}), over "
+            f"{BODY_MAX_TOKENS}, the Agent Skills spec's budget for "
+            "instructions — move detail to references/"
+        )
     return warnings
 
 
@@ -244,13 +304,8 @@ def check_skill(root):
     fields, errors = parse_frontmatter(match.group(1))
     field_errors, warnings = field_problems(fields, os.path.basename(root))
     errors += field_errors + tree_errors(root)
-    body_lines = text[match.end():].count("\n")
-    if body_lines > BODY_MAX_LINES:
-        warnings.append(
-            f"body is {body_lines} lines, over {BODY_MAX_LINES} — move "
-            "detail to references/"
-        )
-    return errors, warnings + orphan_warnings(root, text)
+    warnings += body_warnings(text[match.end():])
+    return errors, warnings + reference_warnings(root, text)
 
 
 def main(argv):
