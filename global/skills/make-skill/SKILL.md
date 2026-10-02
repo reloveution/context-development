@@ -18,6 +18,13 @@ books, articles, docs or a chat into a skill — read
 
 - Needed on every task and not inferable → the stance; needed on demand → the
   skill that owns the topic; a new skill only on the terms of Structure.
+- The global stance loads in every project: it keeps a rule only when every
+  project needs it, and a file several harnesses read stays harness-neutral
+  and names no package skill.
+- A language's rules go to its package skills, not to a stance. A project
+  stance holds what is true of that project only and names the package
+  skills its work needs. Read `references/stance.md` when splitting a stance
+  or adding instructions meant for every task.
 - Before writing, search the stances and neighbouring skills for the rule's
   key terms. Found → name the owner instead of restating the rule.
 - A repeated deterministic step → a script in the skill's `scripts/`.

@@ -29,8 +29,12 @@ projects hold **symlinks** into it, never copies.
   harnesses are never changed just to hide something from Cursor, nor is it
   run in an isolated `HOME`; duplicates in its catalog are tolerated (user
   decision 2026-09-27).
-- A project's own `CLAUDE.md` / `AGENTS.md` holds only project-specific bits:
-  naming suffixes, scanner paths, project commands, token limits.
+- A project's own `CLAUDE.md` / `AGENTS.md` holds only project-specific bits
+  — naming suffixes, scanner paths, project commands, token limits — and
+  names the package skills its work needs. A language's rules live in those
+  skills, never in a block each project imports or copies: Claude loads an
+  `@` import from outside the project only after a per-project approval, and
+  Codex has no import (references). What goes where — `make-skill`.
 - No file in the repo is named `CLAUDE.md` or `AGENTS.md`, in any letter
   case: the disk is case-insensitive APFS, and Claude and Cursor load nested
   ones (Codex unverified). Claude loaded `references/claude.md` and a
@@ -114,7 +118,7 @@ projects hold **symlinks** into it, never copies.
 
 | | Global skills | Global stance | Project skills | Project stance | Invoke |
 |---|---|---|---|---|---|
-| Claude Code | `~/.claude/skills/` | `~/.claude/CLAUDE.md` | `.claude/skills/` | `CLAUDE.md`, never `AGENTS.md` | `/name` |
+| Claude Code | `~/.claude/skills/` | `~/.claude/CLAUDE.md` | `.claude/skills/` | `CLAUDE.md`; `AGENTS.md` only with no `CLAUDE.md` | `/name` |
 | Codex | `~/.codex/skills/`, `~/.agents/skills/` | `~/.codex/AGENTS.md` | `.agents/skills/` | `AGENTS.md`, git root → cwd | `$name` |
 | Cursor CLI | `~/.cursor/skills/`, plus `~/.claude/skills/`, `~/.codex/skills/` | `~/AGENTS.md` only, plus account User Rules | `.cursor/skills/`, `.agents/skills/`, plus `.claude/`, `.codex/` | `AGENTS.md`, `CLAUDE.md`, `.cursor/rules/` in every dir up to `/` | `/name` |
 

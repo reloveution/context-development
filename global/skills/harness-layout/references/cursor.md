@@ -96,8 +96,15 @@ separate from the IDE: `cursor-agent login`, `--api-key` / `--auth-token`, or
   recheck `~/AGENTS.md` after a CLI update. `~/.claude/CLAUDE.md` (probe) and `~/.codex/AGENTS.md` (bundle)
   are not read; a project `CLAUDE.md` is — a project with both `CLAUDE.md` and
   `AGENTS.md` pays for both.
-- An `.mdc` rule with `description` and no `globs` is Apply Intelligently: the
-  model pulls it itself (docs).
+- Project rules, per the rules docs (cursor.com/docs/rules): an `.mdc` in
+  `.cursor/rules/` with frontmatter. This is not Claude's `.claude/rules/`,
+  which is more `CLAUDE.md`. `alwaysApply: true` is included every
+  session. A plain `.md` there is ignored; plain markdown belongs in
+  `AGENTS.md`. `CLAUDE.md` is read the same way and is always applied.
+  `description` and no `globs` is Apply Intelligently. `globs` attach when a
+  matching file is in context — whether this CLI does that is still open.
+  The bundle note above (a `.md` rule always applies, frontmatter not
+  parsed) disagrees with that page and was not re-probed after it.
 - The account's User Rules (IDE: Customize → Rules, docs) reach the CLI in
   every request as `<user_rule>` blocks: 7 rules, ~880 chars, seen in a probe
   chat's `store.db` and quoted back by the model (2026-09-27). No local file

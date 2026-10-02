@@ -8,9 +8,30 @@ Checked on 2.1.282–2.1.283 (the CLI updates itself).
   Symlinked skills work; Claude sees the symlink path (probe 2026-09-25).
 - Stance `~/.claude/CLAUDE.md` — a symlink to
   `global/stance/claude-stance.md`; a target with another name is read (probe
-  2026-09-28). Project `CLAUDE.md`. `AGENTS.md` is never read (probe: in a
-  parent dir).
+  2026-09-28). Project `CLAUDE.md`; with no `CLAUDE.md`, `.claude/CLAUDE.md`
+  or `CLAUDE.local.md` in cwd or above (the user's `~/.claude/CLAUDE.md`
+  does not count), every `AGENTS.md` there instead — from 2.1.277, switch
+  Project instructions in `/config` (docs). A VS Code session in
+  context-development had `~/AGENTS.md` as project instructions (2026-10-02),
+  so such a project pays for both stances.
 - Rules `~/.claude/rules/*.md` are always in context (dir not created).
+- Project memory (docs, code.claude.com/docs/en/memory): an `@path` in
+  `CLAUDE.md` or a read `AGENTS.md` is expanded at launch, relative to that
+  file; an import cuts no cost — its text loads at launch too. An import
+  that resolves outside the working directory is external: the first time,
+  a dialog asks to approve it for the project; declined, it stays off.
+  `.claude/rules/*.md` is more of this memory, not Cursor's `.cursor/rules/`:
+  without `paths` it loads at launch like `.claude/CLAUDE.md`, with `paths`
+  when Claude reads a matching file. A rules symlink pointing outside is an
+  external import too, and the dialog appears only for an `@` import, never
+  for a symlink alone. `~/.claude/CLAUDE.md` and `~/.claude/rules/` import
+  with no dialog.
+  Probe 2026-10-02, 2.1.286, `-p`, empty dir in `~`: a relative `@` and a
+  rules file or symlink inside the project loaded; an absolute `@` outside
+  and a rules symlink pointing outside did not, with no dialog and no denial
+  in the result — interactive approval not run. A rule with
+  `paths: ["**/*.dart"]` was absent from the initial context; loading on a
+  `.dart` read not checked.
 - Commands `~/.claude/commands/*.md` — not used, the dir is gone (2026-09-28).
 - Settings `~/.claude/settings.json`; hook scripts in `~/.claude/hooks/`.
 - `~/.claude/skills/synced/` — skills synced from the claude.ai account; not

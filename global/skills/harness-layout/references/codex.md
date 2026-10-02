@@ -18,7 +18,22 @@ product). Codex is to be dropped later — keep Codex-only files separate.
   `global/stance/agents-stance.md`; a target with another name is read (probe
   2026-09-27). Project `AGENTS.md` from the git root down to cwd; never above
   the git root, and outside git never above cwd. `CLAUDE.md` is not read
-  unless `project_doc_fallback_filenames` names it (unverified).
+  unless `project_doc_fallback_filenames` names it.
+- Project instructions, per the AGENTS.md guide
+  (developers.openai.com/codex/guides/agents-md). From the project root down
+  to cwd, each directory contributes at most one file: `AGENTS.override.md`,
+  then `AGENTS.md`, then `project_doc_fallback_filenames`. The guide
+  documents no import syntax. Fallback names apply when `AGENTS.md` is
+  missing.
+  Probe 2026-10-02, 0.156.1, `codex debug prompt-input`, empty dir in `~`,
+  not a git repo; user `config.toml` not edited. It matches the guide: the
+  `AGENTS.md` body is in the prompt, `@chunks/….md` stays literal, and with
+  `-c 'project_doc_fallback_filenames=["STANCE_CHUNK.md"]'` that file is read
+  only when `AGENTS.md` is absent. `CLAUDE.md` and the rules directories are
+  absent. A symlink that is itself `AGENTS.md` is followed, including a
+  target outside the directory — the guide does not discuss that case.
+  `sub/AGENTS.md` was absent; outside git the guide checks only cwd. The
+  git-root-to-cwd walk was not probed.
 - Settings `~/.codex/config.toml`; annotated key reference
   `~/.codex/CONFIG-REFERENCE.md`. The macOS desktop app ignores `config.toml`
   (open upstream bug); the CLI honors it.
