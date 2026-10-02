@@ -42,6 +42,9 @@ separate from the IDE: `cursor-agent login`, `--api-key` / `--auth-token`, or
   cause, a Dart fact) until `~/AGENTS.md` pointed to it, then 3 of 3 (probes
   2026-09-27). Its description was empty then (invalid YAML, below); fixed,
   it is cut in JE before "Use on every non-trivial task" (2026-09-28).
+  `decide` was picked on «реши сам» in JE with its description cut before
+  the trigger phrases; on «Решай задачу» it was read in 1 of 4 runs and
+  dropped for want of an open choice (probes 2026-10-02).
 - The skills catalog is a fixed budget: its `<agent_skill fullPath="…">`
   elements totalled ≈19.5k chars at 76–110 entries (`store.db`, 10 chats
   2026-09-25…28). Most descriptions are cut to one length plus `...`,
